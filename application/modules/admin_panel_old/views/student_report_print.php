@@ -1,0 +1,1279 @@
+<?php
+// echo '<pre>',print_r($student_details),'<pre>';
+
+function fetch_marks($std_seq, $cs_seq, $test_seq, $term_seq, $sub_seq) {
+
+    $CI = & get_instance();
+    $rv = $CI->db
+        ->get_where('marks_dtl',
+            array(
+                'MD_CLASS_SEQ' => $cs_seq,
+                'MD_TEST_SEQ' => $test_seq,
+                'MD_SUB_SEQ' => $sub_seq,
+                'MD_TERM_SEQ' => $term_seq,
+                'MD_STD_SEQ' => $std_seq)
+        )->result();
+    if(count($rv) == 0){
+        return '-';
+    } else {
+        if(($rv[0]->MD_MARKS == NULL or $rv[0]->MD_MARKS == '') and ($rv[0]->MD_GRADE == NULL or $rv[0]->MD_GRADE == '')){
+            return 'Ab';
+        }else{
+
+            $mt = $CI->db->get_where('subject', array('sub_id' => $sub_seq))->row()->marks_type;
+            if($mt == 'Grade'){
+
+                $rval=$rv[0]->MD_GRADE;
+
+            }else{
+
+                if($rv[0]->MD_MARKS < 10){
+                    $rval='0'.$rv[0]->MD_MARKS;
+                }else{
+                    $rval=$rv[0]->MD_MARKS;
+                }
+            }
+
+            return $rval;
+        }
+    }
+}
+
+function fetch_grade($marks_obtained, $total_marks){
+
+    if($total_marks != 50){
+        $marks_obtained = $marks_obtained * 2;
+    }
+
+    if($marks_obtained >= 90){
+        $grade = 'AA';
+    }else if($marks_obtained >= 80 and $marks_obtained < 90){
+        $grade = 'A+';
+    }else if($marks_obtained >= 70 and $marks_obtained < 80){
+        $grade = 'A';
+    }else if($marks_obtained >= 60 and $marks_obtained < 70){
+        $grade = 'B+';
+    }else if($marks_obtained >= 50 and $marks_obtained < 60){
+        $grade = 'B';
+    }else if($marks_obtained >= 40 and $marks_obtained < 50){
+        $grade = 'C';
+    }else if($marks_obtained >= 0 and $marks_obtained < 40){
+        $grade = 'D';
+    }else{
+        $grade = '<label style="color:red">!!!</label>';
+    }
+
+    return $grade;
+}
+
+function fetch_grade_secondary($marks_obtained, $total_marks){
+
+    // if($total_marks != 50){
+    //     $marks_obtained = $marks_obtained * 2;
+    // }
+
+    if($marks_obtained >= 90){
+        $grade = 'AA';
+    }else if($marks_obtained >= 75 and $marks_obtained < 90){
+        $grade = 'A+';
+    }else if($marks_obtained >= 60 and $marks_obtained < 75){
+        $grade = 'A';
+    }else if($marks_obtained >= 50 and $marks_obtained < 60){
+        $grade = 'B+';
+    }else if($marks_obtained >= 40 and $marks_obtained < 50){
+        $grade = 'B';
+    }else if($marks_obtained >= 30 and $marks_obtained < 40){
+        $grade = 'C';
+    }else if($marks_obtained >= 0 and $marks_obtained < 30){
+        $grade = 'D';
+    }else{
+        $grade = '<label style="color:red">!!!</label>';
+    }
+
+    return $grade;
+}
+
+function fetch_attendance($term_seq, $std_seq){
+    $CI = & get_instance();
+    $rv = $CI->db
+        ->get_where('progress_report_entry', array('EXAM_TERM' => $term_seq,'STUDENT' => $std_seq))
+        ->result();
+    if(count($rv) == 0){
+        return '-';
+    } else {
+        $total_working_days = $CI->db->get_where('exam_terms',array('et_id' => $term_seq))->row()->total_working_days;
+        return $rv[0]->TOTAL_ATTENDANCE . '/' . $total_working_days;
+    }
+}
+
+function fetch_general_remarks($term_seq, $std_seq){
+    $CI = & get_instance();
+    $rv = $CI->db
+        ->get_where('progress_report_entry', array('EXAM_TERM' => $term_seq,'STUDENT' => $std_seq))
+        ->result();
+    if(count($rv) == 0){
+        return '-';
+    } else {
+        return $rv[0]->GENERAL_REMARKS;
+    }
+}
+
+function fetch_charcter_grade($term_seq, $std_seq, $title){
+    $CI = & get_instance();
+    $rv = $CI->db
+        ->get_where('progress_report_entry', array('EXAM_TERM' => $term_seq,'STUDENT' => $std_seq))
+        ->result();
+    if(count($rv) == 0){
+        return '-';
+    } else {
+        $field = 'GRADE_'.$title;
+        return $rv[0]->$field;
+    }
+}
+function fetch_marks_total($std_seq, $test_seq, $term_seq){
+    $CI = & get_instance();
+    $rv = $CI->db
+        ->select('SUM(MD_MARKS) AS total_marks')
+        ->group_by('MD_TERM_SEQ,MD_TEST_SEQ,MD_STD_SEQ')
+        ->get_where('marks_dtl',
+            array(
+                'MD_TEST_SEQ' => $test_seq,
+                'MD_TERM_SEQ' => $term_seq,
+                'MD_STD_SEQ' => $std_seq)
+        )
+        ->row();
+    if(count($rv) == 0){
+        return '-';
+    } else{
+        return ($rv->total_marks < 10) ? '0'. $rv->total_marks : $rv->total_marks;
+    }
+}
+function fetch_sig_status($std_seq, $test_seq, $term_seq){
+    $CI = & get_instance();
+    $rv = $CI->db
+        ->where_in('MD_TEST_SEQ', $test_seq)
+        ->get_where('marks_dtl',
+            array(
+                'MD_TERM_SEQ' => $term_seq,
+                'MD_STD_SEQ' => $std_seq
+            )
+        )->result();
+    if(count($rv) == 0){
+        return false;
+    } else{
+        return true;
+    }
+}
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title><?=$tab_title.' | '.WEBSITE_NAME?></title>
+    <meta name="description" content="Paper Css reports">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/paper-css/0.3.0/paper.css">
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400&display=swap" rel="stylesheet">
+   <style>
+        input[type="text"],input[type="password"],textarea {width: 100%;border: none;outline: none;border-bottom: 2px dashed #b21414;font-size: 14px;font-weight: bold;padding-left: 5px;color: #b21414;text-align: center;}
+        section{margin:auto!important}
+        label{color: #b21414;}
+        table.table { font-family: 'Oswald', sans-serif;border-collapse: collapse;font-size: 12px;}
+
+        .table td, .table th { border: 1px solid #000; text-align: left; padding: 0.2px;}
+        .table th{font-size: 11px;text-align: center;font-weight: lighter}
+        .table td{font-family: 'Open Sans', sans-serif;text-align: center;}
+        .table tr td:first-child{font-weight:bold;text-align: left;padding-left: 5px}
+
+        .left_table{width:128mm; float:left}
+        .left_table tr th:first-child{width:125px}
+        .right_table{width:128mm; float:right}
+        .right_table tr td:first-child{padding: 0px 5px}
+        .right_table tr td strong{font-size: 11px;}
+
+        .padding-5mm{padding:5mm}
+        .gradation{font-weight: bold;text-align: center!important;font-size:11px}
+        .text-center {text-align: center;}
+        .text-justify {text-align: justify;}
+        .heading-text-style {color: #b21414;}
+        .border-bottom {border-bottom: 2px solid;}
+        .para-style {color: #f83030d4;font-size: 1.1rem;line-height: 1.25rem;}
+        .main-div {border: 2px solid;border-radius: 10px;}
+        .parent-p {padding: 0px 10px;}
+        .font-weight-bld {font-weight: bolder;font-size: 1.1rem;}
+        .img-fluid {max-width: 100%;display: block;}
+        .d-flex {display: flex;justify-content: center;}
+        .k2-style {color: #aeae80;font-size: 1.4rem;padding: 0px;margin: 0px;}
+        .parent-form {border: 3px solid #b21414;padding: 0px 5px;}
+        .signature{width: 100%;border: none;outline: none;border: 2px solid #b21414 !important;}
+        .flex-display{display: flex;}
+        .m-0{margin: 0}
+        .my-3{margin: 12px 0px;}
+        .mt-3{margin-top: 20px}
+        .mb-3{margin-bottom: 20px}
+        .mb-2{margin-bottom: 10px}
+        .form-side-padding{padding: 0px 5px;margin-bottom: 11px;}
+    </style>
+</head>
+<?php if($form_type == 'progress_report_type_2'){ ?>
+    <body class="A4">
+
+    <?php foreach($student_details as $sd){ ?>
+
+        <section class="sheet padding-5mm">
+            <div class="body-content" style="margin-top:82px">
+                <div class="left_table">
+                    <div class="main-div">
+                        <div class="border-bottom">
+                            <h1 class="text-center heading-text-style">IMPORTANT INFORMATION</h1>
+                        </div>
+                        <div class="parent-p">
+                            <p class="text-justify para-style">This report enables us to share with parents/guardians our
+                                observation on
+                                the progress of their
+                                sons. It should be duly signed and returned within one week. After the Annual Examination,
+                                it
+                                may be retained.</p>
+                            <p class="text-justify para-style">
+                                The school reserves the right to grant promotion to the student who has demonstrated the
+                                ability
+                                to cope with the next step in his educational progress. The decision of the school
+                                authorities
+                                with regard to promotion is final and indisputable.
+                            </p>
+                            <p class="text-justify para-style">
+                                As academics is only one aspect of a holistic education, maturity, co-curricular and
+                                extra-curricular development are also taken into account in judging the student's ability to
+                                deal with the next class.
+
+                            </p>
+                            <p class="text-justify para-style">
+                                An ailing student should never be sent to appear for an examination/ test under any
+                                circumstances. However, the school authorities should be intimated about such illness.
+                            </p>
+                            <p class="text-justify para-style">
+                                The minimum required attendance is 80% annually. Students from classes 1 to 8 should secure
+                                40%
+                                pass marks in all subjects for promotion to the next class. Students of Classes 8 and 9
+                                follow
+                                the criterion set down by the WBBSE
+                            </p>
+                            <p class="text-center para-style">
+                                Students who fail to secure promotion for two consecutive years cannot be retained in the
+                                school.
+                            </p>
+                            <p class="text-center para-style">
+                                A fine of Rs. 50/- will be charged for a replacement of this report card.
+                            </p>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="table right_table">
+                    <div class="main-div">
+                        <div class="">
+                            <h1 style="font-size:22px" class="text-center heading-text-style" >ST. ANTHONY'S HIGH SCHOOL</h1>
+                            <h1 class="text-center heading-text-style font-weight-bld">(HIGHER SECONDARY)
+                                <br>
+                                19, MARKET STREET, KOLKATA-700 087
+
+                            </h1>
+                        </div>
+                        <hr>
+                        <div class="d-flex" style="margin: 25px 0;">
+                            <img style="height:150px" class="img-fluid" src="<?=base_url()?>/assets/img/favicon.ico" alt=""><!--width="100"-->
+                        </div>
+                        <hr>
+                        <div>
+                            <h2 class="mt-3 mb-3 text-center heading-text-style">PROGRESS REPORT</h2>
+                            <h2 class="text-center k2-style"><?=CURRENT_YEAR?></h2>
+                            <h2 class="mb-2 text-center heading-text-style">CLASS <?=$class . ' - ' . $sec?></h2>
+                        </div>
+                        <div class="form-side-padding">
+                            <div class="parent-form">
+                                <form action="#" method="post">
+                                    <div class="flex-display my-3">
+                                        <label for="name1">Name</label>
+                                        <input type="text" id="name1" value="<?=$sd['STD_FNAME'] . ' ' . $sd['STD_MNAME'] . ' ' . $sd['STD_LNAME']?>">
+                                    </div>
+                                    <div class="flex-display my-3">
+
+                                        <label for="name2">Class</label>
+                                        <input type="text" id="name2" value="<?=$class?>">
+                                        <label for="name3">Sec</label>
+                                        <input type="text" id="name3" value="<?=$sec?>">
+                                    </div>
+                                    <div class="flex-display my-3">
+                                        <label for="name4">Roll</label>
+                                        <input type="text" id="name4" value="<?=$sd['STD_ROLLNO']?>">
+                                        <label for="name5">Reg</label>
+                                        <input type="text" id="name5" value="<?=$sd['STD_REGNO']?>">
+                                    </div>
+                                    <div class="flex-display my-3">
+                                        <label for="name6">Parent/Guardian's Name</label>
+                                        <input type="text" id="name6" value="<?=$sd['STD_FTH_NAME']?>">
+                                    </div>
+                                    <!-- <div class="flex-display my-3">
+                                        <label for="name7">Address</label>
+                                        <input type="text" id="name7">
+                                    </div> -->
+                                    <div class="flex-display my-3">
+                                        <label for="name8">Phone</label>
+                                        <input type="text" id="name8" value="<?=$sd['STD_PH_NO']?>">
+                                    </div>
+                                    <div class="flex-display my-3">
+                                        <label for="name9" style="margin-top:10px">Specimen Signature of Parent/Guardian</label>
+                                        <input class="signature" type="text" id="name9" style="height: 53px;">
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="main-div" style="margin-top: 15px;text-align: center;">
+                        <label>Signature of the Class Teacher</label><br>
+                        <div style="height: 83px;"></div>
+                        <label class="text-center"><b><?= $class_teacher ?></b></label>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <section class="sheet padding-5mm">
+
+            <!-- body content start-->
+            <div class="body-content"  style="margin-top:80px">
+                <div class="left_table">
+                    <div style="padding:15px;border: 2px solid; border-radius: 10px;margin-bottom:10px;margin-top: 0;text-align: center;">
+                        <h4 style="margin:0">ACADEMIC PROGRESS</h4>
+                        <h5 style="margin:0">Name:<?=$sd['STD_FNAME'] . ' ' . $sd['STD_MNAME'] . ' ' . $sd['STD_LNAME']?></h5>
+                        <h5 style="margin:0">
+                            <?='Class: '. $class . '-' . $sec . ' <b>|</b> Roll No.: ' . $sd['STD_ROLLNO'] . ' <b>|</b> Reg. No.: ' . $sd['STD_REGNO'] ?>
+                        </h5>
+                    </div>
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th style="font-size:11px">SCHOLASTIC AREA</th>
+                            <th style="font-size:11px" colspan="4">FIRST TERM</th>
+                            <th style="font-size:11px" colspan="4">SECOND TERM</th>
+                            <th style="font-size:11px" colspan="4">FINAL TERM</th>
+                        </tr>
+                        <tr>
+                            <th>SUBJECTS</th>
+
+                            <th nowrap>&nbsp;FA 1&nbsp;<br> (10)</th>
+                            <th nowrap>&nbsp;SA 1&nbsp;<br> (90)</th>
+                            <th>TOTAL</th>
+                            <th>GRADE</th>
+
+                            <th nowrap>&nbsp;FA 2&nbsp;<br> (10)</th>
+                            <th nowrap>&nbsp;SA 2&nbsp;<br> (90)</th>
+                            <th>TOTAL</th>
+                            <th>GRADE</th>
+
+                            <th nowrap>&nbsp;FA 3&nbsp;<br> (10)</th>
+                            <th nowrap>&nbsp;SA 3&nbsp;<br> (90)</th>
+                            <th>TOTAL</th>
+                            <th>GRADE</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>1st Language Paper</td>
+                            <td><?=$res1=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 1, $sub_seq=40)?></td>
+                            <td><?=$res2=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 1, $sub_seq=40)?></td>
+                            <td><?=$res1+$res2?></td>
+                            <td><?=fetch_grade(($res1+$res2),100)?></td>
+                            <td><?=$res21=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 2, $sub_seq=40)?></td>
+                            <td><?=$res22=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 2, $sub_seq=40)?></td>
+                            <td><?=$res21+$res22?></td>
+                            <td><?=fetch_grade(($res21+$res22),100)?></td>
+                            <td><?=$res41=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 3, $sub_seq=40)?></td>
+                            <td><?=$res42=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 3, $sub_seq=40)?></td>
+                            <td><?=$res41+$res42?></td>
+                            <td><?=fetch_grade(($res41+$res42),100)?></td>
+                        </tr>
+                        <tr>
+                            <td>2nd Language H/Ben</td>
+                            <td><?=$res3=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 1, $sub_seq=34)?></td>
+                            <td><?=$res4=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 1, $sub_seq=34)?></td>
+                            <td><?=$res3+$res4?></td>
+                            <td><?=fetch_grade(($res3+$res4),100)?></td>
+                            <td><?=$res23=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 2, $sub_seq=34)?></td>
+                            <td><?=$res24=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 2, $sub_seq=34)?></td>
+                            <td><?=$res23+$res24?></td>
+                            <td><?=fetch_grade(($res23+$res24),100)?></td>
+                            <td><?=$res43=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 3, $sub_seq=34)?></td>
+                            <td><?=$res44=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 3, $sub_seq=34)?></td>
+                            <td><?=$res43+$res44?></td>
+                            <td><?=fetch_grade(($res43+$res44),100)?></td>
+                        </tr>
+                        <tr>
+                            <td>Mathematics</td>
+                            <td><?=$res5=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 1, $sub_seq=30)?></td>
+                            <td><?=$res6=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 1, $sub_seq=30)?></td>
+                            <td><?=$res5+$res6?></td>
+                            <td><?=fetch_grade(($res5+$res6),100)?></td>
+                            <td><?=$res25=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 2, $sub_seq=30)?></td>
+                            <td><?=$res26=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 2, $sub_seq=30)?></td>
+                            <td><?=$res25+$res26?></td>
+                            <td><?=fetch_grade(($res25+$res26),100)?></td>
+                            <td><?=$res45=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 3, $sub_seq=30)?></td>
+                            <td><?=$res46=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 3, $sub_seq=30)?></td>
+                            <td><?=$res45+$res46?></td>
+                            <td><?=fetch_grade(($res45+$res46),100)?></td>
+                        </tr>
+                        <tr>
+                            <td>Life Science</td>
+                            <td><?=$res7=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 1, $sub_seq=35)?></td>
+                            <td><?=$res8=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 1, $sub_seq=35)?></td>
+                            <td><?=$res7+$res8?></td>
+                            <td><?=fetch_grade(($res7+$res8),100)?></td>
+                            <td><?=$res27=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 2, $sub_seq=35)?></td>
+                            <td><?=$res28=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 2, $sub_seq=35)?></td>
+                            <td><?=$res27+$res28?></td>
+                            <td><?=fetch_grade(($res27+$res28),100)?></td>
+                            <td><?=$res47=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 3, $sub_seq=35)?></td>
+                            <td><?=$res48=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 3, $sub_seq=35)?></td>
+                            <td><?=$res47+$res48?></td>
+                            <td><?=fetch_grade(($res47+$res48),100)?></td>
+                        </tr>
+                        <tr>
+                            <td>Physical Science</td>
+                            <td><?=$res9=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 1, $sub_seq=36)?></td>
+                            <td><?=$res10=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 1, $sub_seq=36)?></td>
+                            <td><?=$res9+$res10?></td>
+                            <td><?=fetch_grade(($res9+$res10),100)?></td>
+                            <td><?=$res29=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 2, $sub_seq=36)?></td>
+                            <td><?=$res30=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 2, $sub_seq=36)?></td>
+                            <td><?=$res29+$res30?></td>
+                            <td><?=fetch_grade(($res29+$res30),100)?></td>
+                            <td><?=$res49=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 3, $sub_seq=36)?></td>
+                            <td><?=$res50=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 3, $sub_seq=36)?></td>
+                            <td><?=$res49+$res50?></td>
+                            <td><?=fetch_grade(($res49+$res50),100)?></td>
+                        </tr>
+                        <tr>
+                            <td>History</td>
+                            <td><?=$res11=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 1, $sub_seq=37)?></td>
+                            <td><?=$res12=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 1, $sub_seq=37)?></td>
+                            <td><?=$res11+$res12?></td>
+                            <td><?=fetch_grade(($res11+$res12),100)?></td>
+                            <td><?=$res31=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 2, $sub_seq=37)?></td>
+                            <td><?=$res32=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 2, $sub_seq=37)?></td>
+                            <td><?=$res31+$res32?></td>
+                            <td><?=fetch_grade(($res31+$res32),100)?></td>
+                            <td><?=$res51=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 3, $sub_seq=37)?></td>
+                            <td><?=$res52=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 3, $sub_seq=37)?></td>
+                            <td><?=$res51+$res52?></td>
+                            <td><?=fetch_grade(($res51+$res52),100)?></td>
+                        </tr>
+                        <tr>
+                            <td>Geography</td>
+                            <td><?=$res13=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 1, $sub_seq=33)?></td>
+                            <td><?=$res14=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 1, $sub_seq=33)?></td>
+                            <td><?=$res13+$res14?></td>
+                            <td><?=fetch_grade(($res13+$res14),100)?></td>
+                            <td><?=$res33=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 2, $sub_seq=33)?></td>
+                            <td><?=$res34=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 2, $sub_seq=33)?></td>
+                            <td><?=$res33+$res34?></td>
+                            <td><?=fetch_grade(($res33+$res34),100)?></td>
+                            <td><?=$res53=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 3, $sub_seq=37)?></td>
+                            <td><?=$res54=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 3, $sub_seq=37)?></td>
+                            <td><?=$res53+$res54?></td>
+                            <td><?=fetch_grade(($res53+$res54),100)?></td>
+                        </tr>
+                        <tr>
+                            <td>PT</td>
+                            <td><?=$res15=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 1, $sub_seq=38)?></td>
+                            <td><?=$res16=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 1, $sub_seq=38)?></td>
+                            <td><?=$res15+$res16?></td>
+                            <td><?=fetch_grade(($res15+$res16),100)?></td>
+                            <td><?=$res35=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 2, $sub_seq=38)?></td>
+                            <td><?=$res36=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 2, $sub_seq=38)?></td>
+                            <td><?=$res35+$res36?></td>
+                            <td><?=fetch_grade(($res35+$res36),100)?></td>
+                            <td><?=$res55=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 3, $sub_seq=38)?></td>
+                            <td><?=$res56=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 3, $sub_seq=38)?></td>
+                            <td><?=$res55+$res56?></td>
+                            <td><?=fetch_grade(($res55+$res56),100)?></td>
+                        </tr>
+                        <tr>
+                            <td>Com</td>
+                            <td><?=$res17=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 1, $sub_seq=39)?></td>
+                            <td><?=$res18=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 1, $sub_seq=39)?></td>
+                            <td><?=$res17+$res18?></td>
+                            <td><?=fetch_grade(($res17+$res18),100)?></td>
+                            <td><?=$res37=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 2, $sub_seq=39)?></td>
+                            <td><?=$res38=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 2, $sub_seq=39)?></td>
+                            <td><?=$res37+$res38?></td>
+                            <td><?=fetch_grade(($res37+$res38),100)?></td>
+                            <td><?=$res57=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 3, $sub_seq=39)?></td>
+                            <td><?=$res58=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 3, $sub_seq=39)?></td>
+                            <td><?=$res57+$res58?></td>
+                            <td><?=fetch_grade(($res57+$res58),100)?></td>
+                        </tr>
+                        <tr>
+                            <td>MS</td>
+                            <td><?=$res19=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 1, $sub_seq=41)?></td>
+                            <td><?=$res20=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 1, $sub_seq=41)?></td>
+                            <td><?=$res19+$res20?></td>
+                            <td><?=fetch_grade(($res19+$res20),100)?></td>
+                            <td><?=$res39=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 2, $sub_seq=41)?></td>
+                            <td><?=$res40=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 2, $sub_seq=41)?></td>
+                            <td><?=$res39+$res40?></td>
+                            <td><?=fetch_grade(($res39+$res40),100)?></td>
+                            <td><?=$res59=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 3, $sub_seq=41)?></td>
+                            <td><?=$res60=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 3, $sub_seq=41)?></td>
+                            <td><?=$res59+$res60?></td>
+                            <td><?=fetch_grade(($res59+$res60),100)?></td>
+                        </tr>
+
+                        <!-- Grade -->
+                        <tr>
+                            <td>Grand Total Grade</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>Attendance</td>
+                            <td colspan="4"><?=fetch_attendance($term=1,$std_seq=$sd['STD_SEQ'])?></td>
+                            <td colspan="4"><?=fetch_attendance($term=2,$std_seq=$sd['STD_SEQ'])?></td>
+                            <td colspan="4"><?=fetch_attendance($term=3,$std_seq=$sd['STD_SEQ'])?></td>
+                        </tr>
+                        <!-- signature -->
+                        <tr>
+                            <td>Class Teacher's Signature</td>
+                            <td colspan="4"></td>
+                            <td colspan="4"></td>
+                            <td colspan="4"></td>
+                        </tr>
+                        <tr>
+                            <td>Head master's Signature</td>
+                            <td colspan="4">
+                                <?php if(($res1+$res2) > 0 or ($res3+$res4) > 0 or ($res5+$res6) > 0 or ($res7+$res8) > 0 or
+                                    ($res9+$res10) > 0 or ($res11+$res12) > 0 or ($res13+$res14) > 0 or ($res53+$res54) > 0 or ($res17+$res18) > 0 or ($res19+$res20) > 0) { ?>
+                                    <img width="25" src="<?=base_url('assets/img') . '/' . $company->HEADMASTER_SIGN?>" />
+                                <?php } ?>
+                            </td>
+                            <td colspan="4">
+                                <?php if(($res21+$res22) > 0 or ($res23+$res24) > 0 or ($res25+$res26) > 0 or ($res27+$res28) > 0 or
+                                    ($res29+$res30) > 0 or ($res31+$res32) > 0 or ($res33+$res34) > 0 or ($res35+$res36) > 0 or ($res37+$res38)>0 or ($res39+$res40)>0) { ?>
+                                    <img width="25" src="<?=base_url('assets/img') . '/' . $company->HEADMASTER_SIGN?>" />
+                                <?php } ?>
+                            </td>
+                            <td colspan="4">
+                                <?php if(($res41+$res42) > 0 or ($res43+$res44) > 0 or ($res45+$res46) > 0 or ($res47+$res48) > 0 or
+                                    ($res49+$res50) > 0 or ($res51+$res52) > 0 or ($res53+$res54) > 0 or ($res55+$res56) > 0 or ($res57+$res58) > 0 or ($res59+$res60) > 0) { ?>
+                                    <img width="25" src="<?=base_url('assets/img') . '/' . $company->HEADMASTER_SIGN?>" />
+                                <?php } ?>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Parent's / Guardian's Signature</td>
+                            <td colspan="2"></td>
+                            <td colspan="2"></td>
+                            <td colspan="2"></td>
+                            <td colspan="2"></td>
+                            <td colspan="2"></td>
+                            <td colspan="2"></td>
+                        </tr>
+
+                        <!-- \remraks section -->
+                        <tr>
+                            <td rowspan="1">General Remarks <br> (First Term)</td>
+                            <td colspan="12" style="height:72px"><?=fetch_general_remarks($term=1,$std_seq=$sd['STD_SEQ'])?></td>
+                        </tr>
+                        <!-- <tr>
+                            <td colspan="12"></td>
+                        </tr> -->
+
+                        <tr>
+                            <td rowspan="1">General Remarks <br> (Second Term)</td>
+                            <td colspan="12" style="height:72px"><?=fetch_general_remarks($term=2,$std_seq=$sd['STD_SEQ'])?></td>
+                        </tr>
+                        <!-- <tr>
+                            <td colspan="12"></td>
+                        </tr> -->
+                        <tr>
+                            <td rowspan="1">General Remarks <br> (Final Term)</td>
+                            <td colspan="12" style="height:72px"><?=fetch_general_remarks($term=3,$std_seq=$sd['STD_SEQ'])?></td>
+                        </tr>
+                        <!-- <tr>
+                            <td colspan="12"></td>
+                        </tr> -->
+
+                        <!-- GRADATION DETAILS -->
+                        <tr>
+                            <td class="gradation" rowspan="7">Gradation Criterion</td>
+                            <td class="gradation" colspan="4">AA</td>
+                            <td class="gradation" colspan="4">100% - 90%</td>
+                            <td class="gradation" colspan="4">OUTSTANDING</td>
+                        </tr>
+                        <tr>
+                            <td class="gradation" colspan="4">A+</td>
+                            <td class="gradation" colspan="4">89% - 80%</td>
+                            <td class="gradation" colspan="4">EXCELLENT</td>
+                        </tr>
+                        <tr>
+                            <td class="gradation" colspan="4">A</td>
+                            <td class="gradation" colspan="4">79% - 70%</td>
+                            <td class="gradation" colspan="4">VERY GOOD</td>
+                        </tr>
+                        <tr>
+                            <td class="gradation" colspan="4">B+</td>
+                            <td class="gradation" colspan="4">69% - 60%</td>
+                            <td class="gradation" colspan="4">GOOD</td>
+                        </tr>
+                        <tr>
+                            <td class="gradation" colspan="4">B</td>
+                            <td class="gradation" colspan="4">59% - 50%</td>
+                            <td class="gradation" colspan="4">SATISFACTORY</td>
+                        </tr>
+                        <tr>
+                            <td class="gradation" colspan="4">C</td>
+                            <td class="gradation" colspan="4">49% - 40%</td>
+                            <td class="gradation" colspan="4">MARGINAL</td>
+                        </tr>
+                        <tr>
+                            <td class="gradation" colspan="4">D</td>
+                            <td class="gradation" colspan="4">39% - 0%</td>
+                            <td class="gradation" colspan="4">DISQUALIFIED</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+
+                <table class="table right_table">
+                    <tr>
+                        <th style="font-size:16px" colspan="5">CHARACTER DEVELOPMENT</th>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;padding-left:10px">
+                            <strong>GRADES</strong><br>
+                            <span>A - Advanced Development </span><br>
+                            <span>B - Good Development</span><br>
+                            <span>C - Average Development </span><br>
+                            <span>D - Below Average Development</span>
+                        </td>
+                        <td class="gradation">First Term</td>
+                        <td class="gradation">Second Term</td>
+                        <td class="gradation">Final Term</td>
+
+                    </tr>
+                    <tr>
+
+                        <td><strong>INITIATIVE</strong><br>(can respond to situations properly)</td>
+                        <td><?=fetch_charcter_grade($term=1,$std_seq=$sd['STD_SEQ'],'INITIATIVE')?></td>
+                        <td><?=fetch_charcter_grade($term=2,$std_seq=$sd['STD_SEQ'],'INITIATIVE')?></td>
+                        <td><?=fetch_charcter_grade($term=3,$std_seq=$sd['STD_SEQ'],'INITIATIVE')?></td>
+                    </tr>
+                    <tr>
+                        <td><strong>PERSEVERANCE</strong> <br>continues with the task in hand till completed</td>
+                        <td><?=fetch_charcter_grade($term=1,$std_seq=$sd['STD_SEQ'],'PERSEVERANCE')?></td>
+                        <td><?=fetch_charcter_grade($term=2,$std_seq=$sd['STD_SEQ'],'PERSEVERANCE')?></td>
+                        <td><?=fetch_charcter_grade($term=3,$std_seq=$sd['STD_SEQ'],'PERSEVERANCE')?></td>
+                    </tr>
+                    <tr>
+                        <td><strong>ORIGINALITY</strong><br>(has ideas of his own, does not try to copy others)</td>
+                        <td><?=fetch_charcter_grade($term=1,$std_seq=$sd['STD_SEQ'],'ORIGINALITY')?></td>
+                        <td><?=fetch_charcter_grade($term=2,$std_seq=$sd['STD_SEQ'],'ORIGINALITY')?></td>
+                        <td><?=fetch_charcter_grade($term=3,$std_seq=$sd['STD_SEQ'],'ORIGINALITY')?></td>
+                    </tr>
+                    <tr>
+                        <td><strong>CONCENTRATION</strong><br>(can apply himself to the work in hand without being
+                            distracted by what is going on around him)</td>
+                        <td><?=fetch_charcter_grade($term=1,$std_seq=$sd['STD_SEQ'],'CONCENTRATION')?></td>
+                        <td><?=fetch_charcter_grade($term=2,$std_seq=$sd['STD_SEQ'],'CONCENTRATION')?></td>
+                        <td><?=fetch_charcter_grade($term=3,$std_seq=$sd['STD_SEQ'],'CONCENTRATION')?></td>
+                    </tr>
+                    <tr>
+                        <td><strong>OBSERVATION</strong><br>(is alert and aware of surroundings, remembers
+                            what he sees)</td>
+                        <td><?=fetch_charcter_grade($term=1,$std_seq=$sd['STD_SEQ'],'OBSERVATION')?></td>
+                        <td><?=fetch_charcter_grade($term=2,$std_seq=$sd['STD_SEQ'],'OBSERVATION')?></td>
+                        <td><?=fetch_charcter_grade($term=3,$std_seq=$sd['STD_SEQ'],'OBSERVATION')?></td>
+                    </tr>
+                    <tr>
+                        <td><strong>CURIOSITY</strong><br>(asks questions, seeks answers, is interested in finding
+                            out more)</td>
+                        <td><?=fetch_charcter_grade($term=1,$std_seq=$sd['STD_SEQ'],'CURIOSITY')?></td>
+                        <td><?=fetch_charcter_grade($term=2,$std_seq=$sd['STD_SEQ'],'CURIOSITY')?></td>
+                        <td><?=fetch_charcter_grade($term=3,$std_seq=$sd['STD_SEQ'],'CURIOSITY')?></td>
+                    </tr>
+                    <tr>
+                        <td><strong>CONFIDENCE</strong><br>(is not afraid to try out new things, to work alone, to ask
+                            questions )</td>
+                        <td><?=fetch_charcter_grade($term=1,$std_seq=$sd['STD_SEQ'],'CONFIDENCE')?></td>
+                        <td><?=fetch_charcter_grade($term=2,$std_seq=$sd['STD_SEQ'],'CONFIDENCE')?></td>
+                        <td><?=fetch_charcter_grade($term=3,$std_seq=$sd['STD_SEQ'],'CONFIDENCE')?></td>
+                    </tr>
+                    <tr>
+                        <td><strong>RESPONSIBILITY</strong><br>(can be trusted to carry out tasks, to look after
+                            his belongings and to respect the property of others)</td>
+                        <td><?=fetch_charcter_grade($term=1,$std_seq=$sd['STD_SEQ'],'RESPONSIBILITY')?></td>
+                        <td><?=fetch_charcter_grade($term=2,$std_seq=$sd['STD_SEQ'],'RESPONSIBILITY')?></td>
+                        <td><?=fetch_charcter_grade($term=3,$std_seq=$sd['STD_SEQ'],'RESPONSIBILITY')?></td>
+                    </tr>
+                    <tr>
+                        <td><strong>RELATIONSHIPS</strong><br>(is friendly, helpful and caring)</td>
+                        <td><?=fetch_charcter_grade($term=1,$std_seq=$sd['STD_SEQ'],'RELATIONSHIPS')?></td>
+                        <td><?=fetch_charcter_grade($term=2,$std_seq=$sd['STD_SEQ'],'RELATIONSHIPS')?></td>
+                        <td><?=fetch_charcter_grade($term=3,$std_seq=$sd['STD_SEQ'],'RELATIONSHIPS')?></td>
+                    </tr>
+                    <tr>
+                        <td><strong>PARTICIPATION IN GROUP WORK</strong><br>(contributes readily, works well with others,
+                            respects team spirit)</td>
+                        <td><?=fetch_charcter_grade($term=1,$std_seq=$sd['STD_SEQ'],'PARTICIPATION')?></td>
+                        <td><?=fetch_charcter_grade($term=2,$std_seq=$sd['STD_SEQ'],'PARTICIPATION')?></td>
+                        <td><?=fetch_charcter_grade($term=3,$std_seq=$sd['STD_SEQ'],'PARTICIPATION')?></td>
+                    </tr>
+                    <tr>
+                        <td><strong>NEATNESS</strong><br>(is tidy and orderly in his work and appearance)</td>
+                        <td><?=fetch_charcter_grade($term=1,$std_seq=$sd['STD_SEQ'],'NEATNESS')?></td>
+                        <td><?=fetch_charcter_grade($term=2,$std_seq=$sd['STD_SEQ'],'NEATNESS')?></td>
+                        <td><?=fetch_charcter_grade($term=3,$std_seq=$sd['STD_SEQ'],'NEATNESS')?></td>
+                    </tr>
+                    <tr>
+                        <td><strong>SPIRIT OF SERVICE</strong><br>(is prepared to sacrifice time and energy for those less
+                            privileged than himself)</td>
+                        <td><?=fetch_charcter_grade($term=1,$std_seq=$sd['STD_SEQ'],'SPIRIT_OF_SERVICE')?></td>
+                        <td><?=fetch_charcter_grade($term=2,$std_seq=$sd['STD_SEQ'],'SPIRIT_OF_SERVICE')?></td>
+                        <td><?=fetch_charcter_grade($term=3,$std_seq=$sd['STD_SEQ'],'SPIRIT_OF_SERVICE')?></td>
+                    </tr>
+                    <tr>
+                        <td><strong>SOCIAL AWARENESS</strong><br>(is aware of society and how it functions and is
+                            concerned for those around him)</td>
+                        <td><?=fetch_charcter_grade($term=1,$std_seq=$sd['STD_SEQ'],'SOCIAL_AWARENESS')?></td>
+                        <td><?=fetch_charcter_grade($term=2,$std_seq=$sd['STD_SEQ'],'SOCIAL_AWARENESS')?></td>
+                        <td><?=fetch_charcter_grade($term=3,$std_seq=$sd['STD_SEQ'],'SOCIAL_AWARENESS')?></td>
+                    </tr>
+                    <tr>
+                        <td><strong>TIME MANAGEMENT</strong><br>(uses time fruitfully, hands in assignments on time,
+                            is punctual)</td>
+                        <td><?=fetch_charcter_grade($term=1,$std_seq=$sd['STD_SEQ'],'TIME_MANAGEMENT')?></td>
+                        <td><?=fetch_charcter_grade($term=2,$std_seq=$sd['STD_SEQ'],'TIME_MANAGEMENT')?></td>
+                        <td><?=fetch_charcter_grade($term=3,$std_seq=$sd['STD_SEQ'],'TIME_MANAGEMENT')?></td>
+                    </tr>
+                </table>
+
+            </div>
+
+        </section>
+
+    <?php } ?>
+
+    <!-- Placed js at the end of the document so the pages load faster -->
+    <script src="<?=base_url();?>assets/admin_panel/js/jquery-1.10.2.min.js"></script>
+    <script></script>
+    </body>
+<?php } else if($form_type == 'progress_report_type_3'){ ?>
+    <body class="A4 landscape">
+
+    <?php foreach($student_details as $sd){ ?>
+        <section class="sheet padding-15mm">
+            <div class="body-content" >
+                <div class="left_table">
+                    <div class="main-div">
+                        <div class="border-bottom">
+                            <h2 class="text-center heading-text-style">IMPORTANT INFORMATION</h2>
+                        </div>
+                        <div class="parent-p">
+                            <p class="text-justify para-style">This report enables us to share with parents/guardians our
+                                observation on
+                                the progress of their
+                                sons. It should be duly signed and returned within one week. After the Annual Examination,
+                                it
+                                may be retained.</p>
+                            <p class="text-justify para-style">
+                                The school reserves the right to grant promotion to the student who has demonstrated the
+                                ability
+                                to cope with the next step in his educational progress. The decision of the school
+                                authorities
+                                with regard to promotion is final and indisputable.
+                            </p>
+                            <p class="text-justify para-style">
+                                As academics is only one aspect of a holistic education, maturity, co-curricular and
+                                extra-curricular development are also taken into account in judging the student's ability to
+                                deal with the next class.
+
+                            </p>
+                            <p class="text-justify para-style">
+                                An ailing student should never be sent to appear for an examination/ test under any
+                                circumstances. However, the school authorities should be intimated about such illness.
+                            </p>
+                            <p class="text-justify para-style">
+                                The minimum required attendance is 80% annually. Students from classes 1 to 8 should secure
+                                40%
+                                pass marks in all subjects for promotion to the next class. Students of Classes 8 and 9
+                                follow
+                                the criterion set down by the WBBSE
+                            </p>
+                            <p class="text-center para-style">
+                                Students who fail to secure promotion for two consecutive years cannot be retained in the
+                                school.
+                            </p>
+                            <p class="text-center para-style">
+                                A fine of Rs. 50/- will be charged for a replacement of this report card.
+                            </p>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="table right_table">
+                    <div class="main-div">
+                        <div class="">
+                            <h3 class="text-center heading-text-style" style="margin-bottom:0;font-size:20px;letter-spacing: 1px;">ST. ANTHONY'S HIGH SCHOOL</h3>
+                            <h4 class="text-center heading-text-style font-weight-bld" style="margin-top:0;font-size: 0.95rem;">
+                                (HIGHER SECONDARY)
+                                <br>
+                                19, MARKET STREET, KOLKATA-700 087
+                            </h4>
+                        </div>
+                        <div class="d-flex" style="margin: 20px 0;">
+                            <img style="height:132px" class="img-fluid" src="<?=base_url()?>/assets/img/favicon.ico" alt=""><!--width="100"-->
+                        </div>
+                        <div>
+                            <h3 class="text-center m-0 heading-text-style">PROGRESS REPORT</h3>
+                            <h3 class="text-center k2-style"><?=CURRENT_YEAR?></h3>
+                            <h3 class="text-center m-0 heading-text-style">CLASS <?=$class . ' - ' . $sec?></h3>
+                        </div>
+                        <div class="form-side-padding">
+                            <div class="parent-form">
+                                <form action="#" method="post">
+                                    <div class="flex-display my-3">
+                                        <label for="name1">Name</label>
+                                        <input type="text" id="name1" value="<?=$sd['STD_FNAME'] . ' ' . $sd['STD_MNAME'] . ' ' . $sd['STD_LNAME']?>">
+                                    </div>
+                                    <div class="flex-display my-3">
+
+                                        <label for="name2">Class</label>
+                                        <input type="text" id="name2" value="<?=$class?>">
+                                        <label for="name3">Sec</label>
+                                        <input type="text" id="name3" value="<?=$sec?>">
+                                    </div>
+                                    <div class="flex-display my-3">
+                                        <label for="name4">Roll</label>
+                                        <input type="text" id="name4" value="<?=$sd['STD_ROLLNO']?>">
+                                        <label for="name5">Reg</label>
+                                        <input type="text" id="name5" value="<?=$sd['STD_REGNO']?>">
+                                    </div>
+                                    <div class="flex-display my-3">
+                                        <label for="name6">Parent/Guardian's Name</label>
+                                        <input type="text" id="name6" value="<?=$sd['STD_FTH_NAME']?>">
+                                    </div>
+                                    <!-- <div class="flex-display my-3">
+                                        <label for="name7">Address</label>
+                                        <input type="text" id="name7">
+                                    </div> -->
+                                    <div class="flex-display my-3">
+                                        <label for="name8">Phone</label>
+                                        <input type="text" id="name8" value="<?=$sd['STD_PH_NO']?>">
+                                    </div>
+                                    <div class="flex-display my-3">
+                                        <label for="name9">Specimen Signature of Parent/Guardian</label>
+                                        <input style="height: 35px" class="signature" type="text" id="name9">
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="main-div" style="margin-top: 8px;text-align: center;">
+                        <label>Class Teacher For <?=$class . '-' . $sec?></label><br>
+                        <div style="height: 40px;"></div>
+                        <label class="text-center"><b><?= $class_teacher ?></b></label>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="sheet padding-15mm">
+
+            <!-- body content start-->
+            <div class="body-content" >
+                <div class="left_table">
+                    <div style="padding:5px;border: 2px solid; border-radius: 10px;margin-bottom:5px;margin-top: 0;text-align: center;">
+                        <h4 style="margin:0">ACADEMIC PROGRESS</h4>
+                        <h5 style="margin:0">Name:<?=$sd['STD_FNAME'] . ' ' . $sd['STD_MNAME'] . ' ' . $sd['STD_LNAME']?></h5>
+                        <h5 style="margin:0"><?='Class: '. $class . '-' . $sec . ' <b>|</b> Roll No.: ' . $sd['STD_ROLLNO'] . ' <b>|</b> Reg. No.: ' . $sd['STD_REGNO'] ?></h5>
+                    </div>
+                    <table class="table" style="width:100%">
+                        <thead>
+                        <tr>
+                            <th>SCHOLASTIC AREA</th>
+                            <th colspan="4">FIRST TERM</th>
+                            <th colspan="4">SECOND TERM</th>
+                            <th colspan="4">FINAL TERM</th>
+                        </tr>
+                        <tr>
+                            <th>SUBJECTS</th>
+
+                            <th>FA 1 <br> (20)</th>
+                            <th>SA 1 <br> (80)</th>
+                            <th>TOTAL</th>
+                            <th>GRADE</th>
+
+                            <th>FA 2 <br> (20)</th>
+                            <th>SA 2 <br> (80)</th>
+                            <th>TOTAL</th>
+                            <th>GRADE</th>
+
+                            <th>FA 3 <br> (20)</th>
+                            <th>SA 3 <br> (80)</th>
+                            <th>TOTAL</th>
+                            <th>GRADE</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <?php
+                        foreach($subjects as $sub){
+                            if($sub->CS_Sub_id == 33 || $sub->CS_Sub_id == 61){
+                                ?>
+                                <tr>
+                                <td><?=$sub->sub_name?></td>
+
+                                <td><?=$res1=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 5, $term_seq = 1, $sub->CS_Sub_id)?></td>
+                                <td><?=$res2=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 6, $term_seq = 1, $sub->CS_Sub_id)?></td>
+                                <td><?= str_pad(($res1 + $res2), 2, '0', STR_PAD_LEFT); ?></td>
+                                <td><?php echo ($res1 == '-' and $res2 == '-') ? '-' : (fetch_grade_secondary(($res1+$res2),100)); ?></td>
+                                <td><?=$res21=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 5, $term_seq = 2, $sub->CS_Sub_id)?></td>
+                                <td><?=$res22=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 6, $term_seq = 2, $sub->CS_Sub_id)?></td>
+                                <td><?= str_pad(($res21 + $res22), 2, '0', STR_PAD_LEFT); ?></td>
+                               <td><?php echo ($res21 == '-' and $res22 == '-') ? '-' : (fetch_grade_secondary(($res21+$res22),100)); ?></td>
+                                <td><?=$res41=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 5, $term_seq = 3, $sub->CS_Sub_id)?></td>
+                                <td><?=$res42=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 6, $term_seq = 3, $sub->CS_Sub_id)?></td>
+                                <td><?= str_pad(($res41 + $res42), 2, '0', STR_PAD_LEFT); ?></td>
+                                <td><?php echo ($res41 == '-' and $res42 == '-') ? '-' : (fetch_grade_secondary(($res41+$res42),100)); ?></td>
+
+                            </tr>
+                                <?php
+                            }else{
+                                ?>
+                                <tr>
+                                <td><?=$sub->sub_name?></td>
+
+                                <td><?=$res1=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 2, $term_seq = 1, $sub->CS_Sub_id)?></td>
+                                <td><?=$res2=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 3, $term_seq = 1, $sub->CS_Sub_id)?></td>
+                                <td><?= str_pad(($res1 + $res2), 2, '0', STR_PAD_LEFT); ?></td>
+                                <td><?php echo ($res1 == '-' and $res2 == '-') ? '-' : (fetch_grade_secondary(($res1+$res2),100)); ?></td>
+                                <td><?=$res21=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 2, $term_seq = 2, $sub->CS_Sub_id)?></td>
+                                <td><?=$res22=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 3, $term_seq = 2, $sub->CS_Sub_id)?></td>
+                                <td><?= str_pad(($res21 + $res22), 2, '0', STR_PAD_LEFT); ?></td>
+                               <td><?php echo ($res21 == '-' and $res22 == '-') ? '-' : (fetch_grade_secondary(($res21+$res22),100)); ?></td>
+                                <td><?=$res41=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 2, $term_seq = 3, $sub->CS_Sub_id)?></td>
+                                <td><?=$res42=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 3, $term_seq = 3, $sub->CS_Sub_id)?></td>
+                                <td><?= str_pad(($res41 + $res42), 2, '0', STR_PAD_LEFT); ?></td>
+                                <td><?php echo ($res41 == '-' and $res42 == '-') ? '-' : (fetch_grade_secondary(($res41+$res42),100)); ?></td>
+
+                            </tr>
+                                <?php
+                            }
+                            ?>
+
+                            
+
+                            <?php
+                        }
+                        ?>
+
+
+                        <!-- Grade -->
+                        <tr>
+                            <td>Grand Total Grade</td>
+                            <?php 
+                           
+                            $percentageArray = []; 
+                            
+                            foreach ($exam_terms as $et) {
+                                 $alltotal = 0;
+                                $subcount = 0;
+                                foreach($subjects as $sub){
+                                     if($sub->CS_Sub_id == 33 || $sub->CS_Sub_id == 61){
+                                        $res1=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 5, $et->et_id, $sub->CS_Sub_id);
+                                        $res2=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 6, $et->et_id, $sub->CS_Sub_id); 
+                                     }else{
+                                        $res1=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 2, $et->et_id, $sub->CS_Sub_id);
+                                        $res2=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 3, $et->et_id, $sub->CS_Sub_id);
+                                     }
+                                   
+                                
+                                    $alltotal += ($res1 + $res2);
+                                    if (($res1 + $res2) > 0) {
+                                        $subcount += 1;
+                                    } 
+                                }
+                                
+                               
+                                $percentage = $alltotal > 0 ? number_format(($alltotal / ($subcount * 100)) * 100, 2) : 0;
+                            
+                                $percentageArray[$et->et_id] = fetch_grade_secondary($percentage, 100, $class);;
+                            }
+                       
+                           
+                            
+
+                           foreach ($exam_terms as $term) {
+                            $fa = 0;
+                            $sa = 0;
+                            $gtl = 0;
+                        
+                            foreach ($subjects as $subject) {
+                                if ($subject->CS_Sub_id == 33 || $subject->CS_Sub_id == 61) {
+                                    $fa += fetch_marks($sd['STD_SEQ'], $cs_seq, 5, $term->et_id, $subject->CS_Sub_id);
+                                    $sa += fetch_marks($sd['STD_SEQ'], $cs_seq, 6, $term->et_id, $subject->CS_Sub_id);
+                                    $gtl = ($fa + $sa);
+                                } else {
+                                    $fa += fetch_marks($sd['STD_SEQ'], $cs_seq, 2, $term->et_id, $subject->CS_Sub_id);
+                                    $sa += fetch_marks($sd['STD_SEQ'], $cs_seq, 3, $term->et_id, $subject->CS_Sub_id);
+                                    $gtl = ($fa + $sa);
+                                }
+                        
+                                
+                            }
+                        
+                            ?>
+                            <td><?= $fa ?></td>
+                            <td><?= $sa ?></td>
+                            <td>
+                                <?php
+                                // Output '-' if both `fa` and `sa` are '-', otherwise format `gtl`
+                                echo ($fa == '-' && $sa == '-') ? '-' : (($gtl < 10) ? '0' . $gtl : $gtl);
+                                ?>
+                            </td>
+                            <td><?= $percentageArray[$term->et_id] ?? '-' ?></td>
+                            <?php
+                        }
+
+                            
+                            ?>
+                        </tr>
+                        <tr>
+                            <td>Attendance</td>
+                            <td colspan="4"><?=fetch_attendance($term=1,$std_seq=$sd['STD_SEQ'])?></td>
+                            <td colspan="4"><?=fetch_attendance($term=2,$std_seq=$sd['STD_SEQ'])?></td>
+                            <td colspan="4"><?=fetch_attendance($term=3,$std_seq=$sd['STD_SEQ'])?></td>
+                        </tr>
+                        <!-- signature -->
+                        <tr>
+                            <td>Class Teacher's Signature</td>
+                            <td colspan="4"></td>
+                            <td colspan="4"></td>
+                            <td colspan="4"></td>
+                        </tr>
+                        <tr>
+                            <td>Head master's <br> Signature</td>
+                            <?php
+                            foreach($exam_terms as $et){
+                                if(fetch_sig_status($sd['STD_SEQ'], $test_seq = [2,3], $et->et_id)){
+                                    ?>
+                                    <td colspan="4"><img height="35" src="<?=base_url('assets/img/'.$company->HEADMASTER_SIGN)?>" /></td>
+                                    <?php
+                                }
+                                else {
+                                    echo '<td colspan="4"></td>';
+                                }
+                            }
+                            ?>
+
+                        </tr>
+                        <tr>
+                            <td>Parent's / Guardian's Signature</td>
+                             <?php foreach($exam_terms as $et){ ?>
+                                <td colspan="4"></td>
+                            <?php } ?>
+                        </tr>
+
+                        <!-- \remraks section -->
+                       <?php foreach($exam_terms as $et){ ?>
+                            <tr>
+                                <td rowspan="1">General Remarks <br> (<?=$et->term_title?>)</td>
+                                <td colspan="12" style="height:50px"><?=fetch_general_remarks($et->et_id,$std_seq=$sd['STD_SEQ'])?></td>
+                            </tr>
+                        <?php } ?>
+                        <!-- <tr>
+                            <td colspan="12"></td>
+                        </tr> -->
+
+                       
+                        <!-- <tr>
+                            <td colspan="12"></td>
+                        </tr> -->
+
+                        <!-- GRADATION DETAILS -->
+                        <tr>
+                            <td class="gradation" rowspan="7">Gradation Criterion</td>
+                            <td class="gradation" colspan="4">AA</td>
+                            <td class="gradation" colspan="4">100% - 90%</td>
+                            <td class="gradation" colspan="4">OUTSTANDING</td>
+                        </tr>
+                        <tr>
+                            <td class="gradation" colspan="4">A+</td>
+                            <td class="gradation" colspan="4">89% - 75%</td>
+                            <td class="gradation" colspan="4">EXCELLENT</td>
+                        </tr>
+                        <tr>
+                            <td class="gradation" colspan="4">A</td>
+                            <td class="gradation" colspan="4">74% - 60%</td>
+                            <td class="gradation" colspan="4">VERY GOOD</td>
+                        </tr>
+                        <tr>
+                            <td class="gradation" colspan="4">B+</td>
+                            <td class="gradation" colspan="4">59% - 50%</td>
+                            <td class="gradation" colspan="4">GOOD</td>
+                        </tr>
+                        <tr>
+                            <td class="gradation" colspan="4">B</td>
+                            <td class="gradation" colspan="4">49% - 40%</td>
+                            <td class="gradation" colspan="4">SATISFACTORY</td>
+                        </tr>
+                        <tr>
+                            <td class="gradation" colspan="4">C</td>
+                            <td class="gradation" colspan="4">39% - 30%</td>
+                            <td class="gradation" colspan="4">MARGINAL</td>
+                        </tr>
+                        <tr>
+                            <td class="gradation" colspan="4">D</td>
+                            <td class="gradation" colspan="4">29% - 0%</td>
+                            <td class="gradation" colspan="4">DISQUALIFIED</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+
+                <table class="table right_table">
+                    <tr>
+                        <th colspan="5">CHARACTER DEVELOPMENT</th>
+
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;padding-left:10px">
+                            <strong>GRADES</strong><br>
+                            <span>A - Advanced Development </span><br>
+                            <span>B - Good Development</span><br>
+                            <span>C - Average Development </span><br>
+                            <span>D - Below Average Development</span>
+                        </td>
+                        <td class="gradation">First Term</td>
+                        <td class="gradation">Second Term</td>
+                        <td class="gradation">Final Term</td>
+
+                    </tr>
+                    <tr>
+
+                        <td><strong>INITIATIVE</strong><br>(can respond to situations properly)</td>
+                        <td><?=fetch_charcter_grade($term=1,$std_seq=$sd['STD_SEQ'],'INITIATIVE')?></td>
+                        <td><?=fetch_charcter_grade($term=2,$std_seq=$sd['STD_SEQ'],'INITIATIVE')?></td>
+                        <td><?=fetch_charcter_grade($term=3,$std_seq=$sd['STD_SEQ'],'INITIATIVE')?></td>
+                    </tr>
+                    <tr>
+                        <td><strong>PERSEVERANCE</strong> <br>continues with the task in hand till completed</td>
+                        <td><?=fetch_charcter_grade($term=1,$std_seq=$sd['STD_SEQ'],'PERSEVERANCE')?></td>
+                        <td><?=fetch_charcter_grade($term=2,$std_seq=$sd['STD_SEQ'],'PERSEVERANCE')?></td>
+                        <td><?=fetch_charcter_grade($term=3,$std_seq=$sd['STD_SEQ'],'PERSEVERANCE')?></td>
+                    </tr>
+                    <tr>
+                        <td><strong>ORIGINALITY</strong><br>(has ideas of his own, does not try to copy others)</td>
+                        <td><?=fetch_charcter_grade($term=1,$std_seq=$sd['STD_SEQ'],'ORIGINALITY')?></td>
+                        <td><?=fetch_charcter_grade($term=2,$std_seq=$sd['STD_SEQ'],'ORIGINALITY')?></td>
+                        <td><?=fetch_charcter_grade($term=3,$std_seq=$sd['STD_SEQ'],'ORIGINALITY')?></td>
+                    </tr>
+                    <tr>
+                        <td><strong>CONCENTRATION</strong><br>(can apply himself to the work in hand without being
+                            distracted by what is going on around him)</td>
+                        <td><?=fetch_charcter_grade($term=1,$std_seq=$sd['STD_SEQ'],'CONCENTRATION')?></td>
+                        <td><?=fetch_charcter_grade($term=2,$std_seq=$sd['STD_SEQ'],'CONCENTRATION')?></td>
+                        <td><?=fetch_charcter_grade($term=3,$std_seq=$sd['STD_SEQ'],'CONCENTRATION')?></td>
+                    </tr>
+                    <tr>
+                        <td><strong>OBSERVATION</strong><br>(is alert and aware of surroundings, remembers
+                            what he sees)</td>
+                        <td><?=fetch_charcter_grade($term=1,$std_seq=$sd['STD_SEQ'],'OBSERVATION')?></td>
+                        <td><?=fetch_charcter_grade($term=2,$std_seq=$sd['STD_SEQ'],'OBSERVATION')?></td>
+                        <td><?=fetch_charcter_grade($term=3,$std_seq=$sd['STD_SEQ'],'OBSERVATION')?></td>
+                    </tr>
+                    <tr>
+                        <td><strong>CURIOSITY</strong><br>(asks questions, seeks answers, is interested in finding
+                            out more)</td>
+                        <td><?=fetch_charcter_grade($term=1,$std_seq=$sd['STD_SEQ'],'CURIOSITY')?></td>
+                        <td><?=fetch_charcter_grade($term=2,$std_seq=$sd['STD_SEQ'],'CURIOSITY')?></td>
+                        <td><?=fetch_charcter_grade($term=3,$std_seq=$sd['STD_SEQ'],'CURIOSITY')?></td>
+                    </tr>
+                    <tr>
+                        <td><strong>CONFIDENCE</strong><br>(is not afraid to try out new things, to work alone, to ask
+                            questions )</td>
+                        <td><?=fetch_charcter_grade($term=1,$std_seq=$sd['STD_SEQ'],'CONFIDENCE')?></td>
+                        <td><?=fetch_charcter_grade($term=2,$std_seq=$sd['STD_SEQ'],'CONFIDENCE')?></td>
+                        <td><?=fetch_charcter_grade($term=3,$std_seq=$sd['STD_SEQ'],'CONFIDENCE')?></td>
+                    </tr>
+                    <tr>
+                        <td><strong>RESPONSIBILITY</strong><br>(can be trusted to carry out tasks, to look after
+                            his belongings and to respect the property of others)</td>
+                        <td><?=fetch_charcter_grade($term=1,$std_seq=$sd['STD_SEQ'],'RESPONSIBILITY')?></td>
+                        <td><?=fetch_charcter_grade($term=2,$std_seq=$sd['STD_SEQ'],'RESPONSIBILITY')?></td>
+                        <td><?=fetch_charcter_grade($term=3,$std_seq=$sd['STD_SEQ'],'RESPONSIBILITY')?></td>
+                    </tr>
+                    <tr>
+                        <td><strong>RELATIONSHIPS</strong><br>(is friendly, helpful and caring)</td>
+                        <td><?=fetch_charcter_grade($term=1,$std_seq=$sd['STD_SEQ'],'RELATIONSHIPS')?></td>
+                        <td><?=fetch_charcter_grade($term=2,$std_seq=$sd['STD_SEQ'],'RELATIONSHIPS')?></td>
+                        <td><?=fetch_charcter_grade($term=3,$std_seq=$sd['STD_SEQ'],'RELATIONSHIPS')?></td>
+                    </tr>
+                    <tr>
+                        <td><strong>PARTICIPATION IN GROUP WORK</strong><br>(contributes readily, works well with others,
+                            respects team spirit)</td>
+                        <td><?=fetch_charcter_grade($term=1,$std_seq=$sd['STD_SEQ'],'PARTICIPATION')?></td>
+                        <td><?=fetch_charcter_grade($term=2,$std_seq=$sd['STD_SEQ'],'PARTICIPATION')?></td>
+                        <td><?=fetch_charcter_grade($term=3,$std_seq=$sd['STD_SEQ'],'PARTICIPATION')?></td>
+                    </tr>
+                    <tr>
+                        <td><strong>NEATNESS</strong><br>(is tidy and orderly in his work and appearance)</td>
+                        <td><?=fetch_charcter_grade($term=1,$std_seq=$sd['STD_SEQ'],'NEATNESS')?></td>
+                        <td><?=fetch_charcter_grade($term=2,$std_seq=$sd['STD_SEQ'],'NEATNESS')?></td>
+                        <td><?=fetch_charcter_grade($term=3,$std_seq=$sd['STD_SEQ'],'NEATNESS')?></td>
+                    </tr>
+                    <tr>
+                        <td><strong>SPIRIT OF SERVICE</strong><br>(is prepared to sacrifice time and energy for those less
+                            privileged than himself)</td>
+                        <td><?=fetch_charcter_grade($term=1,$std_seq=$sd['STD_SEQ'],'SPIRIT_OF_SERVICE')?></td>
+                        <td><?=fetch_charcter_grade($term=2,$std_seq=$sd['STD_SEQ'],'SPIRIT_OF_SERVICE')?></td>
+                        <td><?=fetch_charcter_grade($term=3,$std_seq=$sd['STD_SEQ'],'SPIRIT_OF_SERVICE')?></td>
+                    </tr>
+                    <tr>
+                        <td><strong>SOCIAL AWARENESS</strong><br>(is aware of society and how it functions and is
+                            concerned for those around him)</td>
+                        <td><?=fetch_charcter_grade($term=1,$std_seq=$sd['STD_SEQ'],'SOCIAL_AWARENESS')?></td>
+                        <td><?=fetch_charcter_grade($term=2,$std_seq=$sd['STD_SEQ'],'SOCIAL_AWARENESS')?></td>
+                        <td><?=fetch_charcter_grade($term=3,$std_seq=$sd['STD_SEQ'],'SOCIAL_AWARENESS')?></td>
+                    </tr>
+                    <tr>
+                        <td><strong>TIME MANAGEMENT</strong><br>(uses time fruitfully, hands in assignments on time,
+                            is punctual)</td>
+                        <td><?=fetch_charcter_grade($term=1,$std_seq=$sd['STD_SEQ'],'TIME_MANAGEMENT')?></td>
+                        <td><?=fetch_charcter_grade($term=2,$std_seq=$sd['STD_SEQ'],'TIME_MANAGEMENT')?></td>
+                        <td><?=fetch_charcter_grade($term=3,$std_seq=$sd['STD_SEQ'],'TIME_MANAGEMENT')?></td>
+                    </tr>
+                </table>
+
+            </div>
+
+        </section>
+
+    <?php } ?>
+
+    <!-- Placed js at the end of the document so the pages load faster -->
+    <script src="<?=base_url();?>assets/admin_panel/js/jquery-1.10.2.min.js"></script>
+    <script></script>
+    </body>
+<?php } ?>
+</html>

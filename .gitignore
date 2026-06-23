@@ -1,0 +1,20 @@
+# IDE
+.idea/workspace.xml
+.idea/deployment.xml
+
+# Sensitive config — NEVER commit these (contains DB password & live payment keys)
+application/config/database.php
+application/config/easebuzz.php
+
+# Logs & cache
+application/logs/*.php
+application/cache/*
+
+# Uploaded files / QR codes
+/assets/admin_panel/img/qr_codes/
+/assets/admin_panel/img/uploads/
+/assets/admin_panel/img/student_photos/
+
+# OS files
+Thumbs.db
+.DS_Store
