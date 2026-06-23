@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // echo $form_type;
 // echo '<pre>',print_r($student_details),'<pre>'; 
 
@@ -81,6 +81,8 @@ function fetch_attendance($term_seq, $std_seq){
     }
 }
 
+function safe_num($v) { return is_numeric($v) ? (float)$v : 0; }
+
 function fetch_general_remarks($term_seq, $std_seq){
     $CI = & get_instance();
     $rv = $CI->db
@@ -119,7 +121,7 @@ function fetch_marks_total($std_seq, $test_seq, $term_seq){
         )
         ->row();
         //echo $CI->db->last_query();
-    if(count($rv) == 0){
+    if($rv === null || $rv->total_marks === null){
         return '-';
     } else{
         return ($rv->total_marks < 10) ? '0'. $rv->total_marks : $rv->total_marks;
@@ -377,8 +379,10 @@ if($form_type == 'progress_report_type_2'){
                                 foreach($exam_terms as $et){ 
                                   $res1=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $et->et_id, $sub->CS_Sub_id);
                                   $res2=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $et->et_id, $sub->CS_Sub_id);
-                                  if($res1 > 0 || $res2 > 0){
-                                      $total = $res1+$res2;
+                                  $r1n = is_numeric($res1) ? (float)$res1 : 0;
+                                  $r2n = is_numeric($res2) ? (float)$res2 : 0;
+                                  if($r1n > 0 || $r2n > 0){
+                                      $total = $r1n + $r2n;
                                   }else{
                                       $total = 0;
                                   }
@@ -389,7 +393,7 @@ if($form_type == 'progress_report_type_2'){
                                     <td style="font-weight:bold">
                                        <?php 
                                        if(is_numeric($res1) || is_numeric($res2) ){
-                                           $sum = ($res1 == '-' || $res2 == '-') ? '-' : $res1 + $res2;
+                                           $sum = ($res1 == '-' || $res2 == '-') ? '-' : safe_num($res1)+safe_num($res2);
                                             echo (is_numeric($sum)) ? (($sum < 0) ? '-'  :  str_pad($sum, 2, '0', STR_PAD_LEFT)) : '-'; 
                                        }else{
                                            echo '-';
@@ -400,7 +404,7 @@ if($form_type == 'progress_report_type_2'){
                                     <td>
                                         <?php 
                                         if(is_numeric($res1) || is_numeric($res2) ){
-                                          $total = ($res1 == '-' || $res2 == '-') ? '-' : ($res1 + $res2);
+                                          $total = ($res1 == '-' || $res2 == '-') ? '-' : (safe_num($res1)+safe_num($res2));
                                           echo is_numeric($total) ? fetch_grade($total, 100, $class) : $res2;  
                                         }else{
                                             echo $res2;
@@ -443,8 +447,8 @@ if($form_type == 'progress_report_type_2'){
                                    $res1=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $et->et_id, $sub->CS_Sub_id);
                                    $res2=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $et->et_id, $sub->CS_Sub_id);
                                 
-                                    $alltotal += ($res1 + $res2);
-                                    if (($res1 + $res2) > 0) {
+                                    $alltotal += (safe_num($res1)+safe_num($res2));
+                                    if ((safe_num($res1)+safe_num($res2)) > 0) {
                                         $subcount += 1;
                                     } 
                                 }
@@ -966,20 +970,20 @@ else if($form_type == 'progress_report_type_3'){
                                         <?php
 
                                         // show pinci sign if any data is entered in any of the terms
-                                        if($term_iter == 1 and ($res1+$res2) > 0){
+                                        if($term_iter == 1 and (safe_num($res1)+safe_num($res2)) > 0){
                                             $entry_status_1 = 1;
                                         }
-                                        if($term_iter == 2 and ($res1+$res2) > 0){
+                                        if($term_iter == 2 and (safe_num($res1)+safe_num($res2)) > 0){
                                             $entry_status_2 = 1;
-                                        }if($term_iter == 3 and ($res1+$res2) > 0){
+                                        }if($term_iter == 3 and (safe_num($res1)+safe_num($res2)) > 0){
                                             $entry_status_3 = 1;
                                         }
                                         $term_iter++;
 
-                                        echo ($res1+$res2 < 10) ? '0' . ($res1+$res2) : ($res1+$res2);
+                                        echo (safe_num($res1)+safe_num($res2) < 10) ? '0' . (safe_num($res1)+safe_num($res2)) : (safe_num($res1)+safe_num($res2));
                                         ?>
                                     </td>
-                                    <td><?=fetch_grade(($res1+$res2),100,$class)?></td>
+                                    <td><?=fetch_grade((safe_num($res1)+safe_num($res2)),100,$class)?></td>
                                 <?php } ?>
                             </tr>
 

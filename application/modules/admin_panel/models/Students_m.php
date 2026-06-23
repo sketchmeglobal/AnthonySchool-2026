@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Coded by: Pran Krishna Das
  * Social: sketchmeglobal.com
@@ -130,6 +130,7 @@ EOD;
         $pdf->writeHTMLCell(0, 0, '', '', $html, 0, 1, 0, true, '', true);
 
         // Close and output PDF document
+        ob_end_clean();
         $pdf->Output($doc_name . '.pdf', 'I');
     }
 
@@ -858,24 +859,24 @@ EOD;
             $com = $this->db->get_where('company',array('SCHOOL_TYPE' => $cls_type))->row()->COM_NAME;
 
             if($cls_type == 1){
-                $imgsrc = base_url('assets/img/SCHOOL_LOGO_NUR.jpg');
+                $imgsrc = FCPATH . 'assets/img/SCHOOL_LOGO_NUR.jpg';
             }else{
-                $imgsrc = base_url('assets/img/SCHOOL_LOGO.jpg');
+                $imgsrc = FCPATH . 'assets/img/SCHOOL_LOGO.jpg';
             }
 
             //if class does not exists
-            if (count($cls) == 0) {
+            if ($cls === null) {
                 $this->session->set_flashdata('type', 'error');
                 $this->session->set_flashdata('title', 'Naa!');
                 $this->session->set_flashdata('msg', 'Class not found.');
-                return array('page' => 'admin/admit_card');
+                return array('type' => 'redirect', 'page' => 'admin/admit_card');
             }
             //if no student selected
-            if (count($std_id_arr) == 0) {
+            if (empty($std_id_arr)) {
                 $this->session->set_flashdata('type', 'error');
                 $this->session->set_flashdata('title', 'Zzz!');
                 $this->session->set_flashdata('msg', 'No Student Selected.');
-                return array('page' => 'admin/admit_card');
+                return array('type' => 'redirect', 'page' => 'admin/admit_card');
             }
 
             $this->db->select('STD_SEQ,STD_ROLLNO,STD_FNAME,STD_MNAME,STD_LNAME');
@@ -949,8 +950,8 @@ EOD;
                 $params['level'] = 'H';
                 $params['size'] = 2;
                 $params['savename'] = 'assets/admin_panel/img/qr_codes/admit_card_qr/'.$v['STD_SEQ'].'_AdmitCard.png';
-                $qr = base_url('assets/img/logo_stan.jpg');
-                $sign = base_url('assets/img/'.$company->HEADMASTER_SIGN);
+                $qr = FCPATH . 'assets/img/logo_stan.jpg';
+                $sign = FCPATH . 'assets/img/' . $company->HEADMASTER_SIGN;
 
                 $html .= <<<EOD
 <table cellspacing="0" cellpadding="0" border="1" style="float:right;width:325px;">
@@ -1018,6 +1019,7 @@ EOD;
             $pdf->writeHTMLCell(0, 0, '', '', $html, 0, 1, 0, true, '', true);
 
             // Close and output PDF document
+            ob_end_clean();
             $pdf->Output($doc_name . '.pdf', 'I');
 
         }
@@ -1033,9 +1035,9 @@ EOD;
             $com = $this->db->get_where('company',array('SCHOOL_TYPE' => $cls_type))->row()->COM_NAME;
 
             if($cls_type == 1){
-                $imgsrc = base_url('assets/img/SCHOOL_LOGO_NUR.jpg');
+                $imgsrc = FCPATH . 'assets/img/SCHOOL_LOGO_NUR.jpg';
             }else{
-                $imgsrc = base_url('assets/img/SCHOOL_LOGO.jpg');
+                $imgsrc = FCPATH . 'assets/img/SCHOOL_LOGO.jpg';
             }
 
             // create new PDF document
@@ -1147,6 +1149,7 @@ EOD;
             $pdf->writeHTMLCell(0, 0, '', '', $html, 0, 1, 0, true, '', true);
 
             // Close and output PDF document
+            ob_end_clean();
             $pdf->Output($doc_name . '.pdf', 'I');
         }
         else { //if form not submitted
@@ -1183,24 +1186,24 @@ EOD;
             $com = $this->db->get_where('company',array('SCHOOL_TYPE' => $cls_type))->row()->COM_NAME;
 
             if($cls_type == 1){
-                $imgsrc = base_url('assets/img/SCHOOL_LOGO_NUR.jpg');
+                $imgsrc = FCPATH . 'assets/img/SCHOOL_LOGO_NUR.jpg';
             }else{
-                $imgsrc = base_url('assets/img/SCHOOL_LOGO.jpg');
+                $imgsrc = FCPATH . 'assets/img/SCHOOL_LOGO.jpg';
             }
 
             //if class does not exists
-            if (count((array)$cls) == 0) {
+            if ($cls === null) {
                 $this->session->set_flashdata('type', 'error');
                 $this->session->set_flashdata('title', 'Naa!');
                 $this->session->set_flashdata('msg', 'Class not found.');
-                return array('page' => 'admin/identity_card');
+                return array('type' => 'redirect', 'page' => 'admin/identity_card');
             }
             //if no student selected
-            if (count($std_id_arr) == 0) {
+            if (empty($std_id_arr)) {
                 $this->session->set_flashdata('type', 'error');
                 $this->session->set_flashdata('title', 'Zzz!');
                 $this->session->set_flashdata('msg', 'No Student Selected.');
-                return array('page' => 'admin/identity_card');
+                return array('type' => 'redirect', 'page' => 'admin/identity_card');
             }
 
             $this->db->select('states.name as state,STD_FTH_NAME,STD_REGNO,STD_ROLLNO,STD_FNAME,STD_MNAME,STD_LNAME,STD_DOB,STD_PH_NO,STD_ADDR_0,STD_ADDR_1,STD_ADDR_2,STD_ADDR_5,STD_IMAGE_PATH');
@@ -1357,6 +1360,7 @@ EOD;
             $pdf->writeHTMLCell(0, 0, '', '', $html, 0, 1, 0, true, '', true);
 
             // Close and output PDF document
+            ob_end_clean();
             $pdf->Output($doc_name . '.pdf', 'I');
 
         }
@@ -1371,9 +1375,9 @@ EOD;
             $com = $this->db->get_where('company',array('SCHOOL_TYPE' => $cls_type))->row()->COM_NAME;
 
             if($cls_type == 1){
-                $imgsrc = base_url('assets/img/SCHOOL_LOGO_NUR.jpg');
+                $imgsrc = FCPATH . 'assets/img/SCHOOL_LOGO_NUR.jpg';
             }else{
-                $imgsrc = base_url('assets/img/SCHOOL_LOGO.jpg');
+                $imgsrc = FCPATH . 'assets/img/SCHOOL_LOGO.jpg';
             }
             //-------------------------------------------------------------------------------------------------------
 
@@ -1504,6 +1508,7 @@ EOD;
             $pdf->writeHTMLCell(0, 0, '', '', $html, 0, 1, 0, true, '', true);
 
             // Close and output PDF document
+            ob_end_clean();
             $pdf->Output($doc_name . '.pdf', 'I');
 
         }
@@ -1746,7 +1751,7 @@ EOD;
         $this->db->where('CS_SEQ', $cls_id);
         $cls = $this->db->get('class_sec_hdr')->row();
         //if class does not exists
-        if(count($cls) == 0) {
+        if($cls === null) {
             $this->session->set_flashdata('type', 'error');
             $this->session->set_flashdata('title', 'Oops!');
             $this->session->set_flashdata('msg', 'Class does not exists.');
@@ -1756,7 +1761,7 @@ EOD;
         $this->db->where('class_id', $cls_id);
         $check = $this->db->get('routine')->row();
         //if routine for that class already added
-        if(count($check) > 0) {
+        if($check !== null) {
             $this->session->set_flashdata('type', 'error');
             $this->session->set_flashdata('title', 'Zzz!');
             $this->session->set_flashdata('msg', 'Routine for that class already added.');
@@ -1836,7 +1841,7 @@ EOD;
         $this->db->where('CS_SEQ', $cls_id);
         $cls = $this->db->get('class_sec_hdr')->row();
         //if class does not exists
-        if(count($cls) == 0) {
+        if($cls === null) {
             $this->session->set_flashdata('type', 'error');
             $this->session->set_flashdata('title', 'Oops!');
             $this->session->set_flashdata('msg', 'Class does not exists.');
@@ -1846,7 +1851,7 @@ EOD;
         $this->db->where('class_id', $cls_id);
         $check = $this->db->get('routine')->row();
         //if routine for that class not added yet
-        if(count($check) == 0) {
+        if($check === null) {
             $this->session->set_flashdata('type', 'error');
             $this->session->set_flashdata('title', 'Zzz!');
             $this->session->set_flashdata('msg', 'Routine for that class is not added yet.');
@@ -2625,3 +2630,4 @@ EOD;
     }
 
 } // /.Students_m model
+

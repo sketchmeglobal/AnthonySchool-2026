@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // echo '<pre>',print_r($student_details),'<pre>';
 
 function fetch_marks($std_seq, $cs_seq, $test_seq, $term_seq, $sub_seq) {
@@ -106,6 +106,8 @@ function fetch_attendance($term_seq, $std_seq){
     }
 }
 
+function safe_num($v) { return is_numeric($v) ? (float)$v : 0; }
+
 function fetch_general_remarks($term_seq, $std_seq){
     $CI = & get_instance();
     $rv = $CI->db
@@ -142,7 +144,7 @@ function fetch_marks_total($std_seq, $test_seq, $term_seq){
                 'MD_STD_SEQ' => $std_seq)
         )
         ->row();
-    if(count($rv) == 0){
+    if($rv === null || $rv->total_marks === null){
         return '-';
     } else{
         return ($rv->total_marks < 10) ? '0'. $rv->total_marks : $rv->total_marks;
@@ -381,151 +383,151 @@ function fetch_sig_status($std_seq, $test_seq, $term_seq){
                             <td>1st Language Paper</td>
                             <td><?=$res1=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 1, $sub_seq=40)?></td>
                             <td><?=$res2=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 1, $sub_seq=40)?></td>
-                            <td><?=$res1+$res2?></td>
-                            <td><?=fetch_grade(($res1+$res2),100)?></td>
+                            <td><?=safe_num($res1)+safe_num($res2)?></td>
+                            <td><?=fetch_grade((safe_num($res1)+safe_num($res2)),100)?></td>
                             <td><?=$res21=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 2, $sub_seq=40)?></td>
                             <td><?=$res22=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 2, $sub_seq=40)?></td>
-                            <td><?=$res21+$res22?></td>
-                            <td><?=fetch_grade(($res21+$res22),100)?></td>
+                            <td><?=safe_num($res21)+safe_num($res22)?></td>
+                            <td><?=fetch_grade((safe_num($res21)+safe_num($res22)),100)?></td>
                             <td><?=$res41=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 3, $sub_seq=40)?></td>
                             <td><?=$res42=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 3, $sub_seq=40)?></td>
-                            <td><?=$res41+$res42?></td>
-                            <td><?=fetch_grade(($res41+$res42),100)?></td>
+                            <td><?=safe_num($res41)+safe_num($res42)?></td>
+                            <td><?=fetch_grade((safe_num($res41)+safe_num($res42)),100)?></td>
                         </tr>
                         <tr>
                             <td>2nd Language H/Ben</td>
                             <td><?=$res3=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 1, $sub_seq=34)?></td>
                             <td><?=$res4=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 1, $sub_seq=34)?></td>
-                            <td><?=$res3+$res4?></td>
-                            <td><?=fetch_grade(($res3+$res4),100)?></td>
+                            <td><?=safe_num($res3)+safe_num($res4)?></td>
+                            <td><?=fetch_grade((safe_num($res3)+safe_num($res4)),100)?></td>
                             <td><?=$res23=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 2, $sub_seq=34)?></td>
                             <td><?=$res24=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 2, $sub_seq=34)?></td>
-                            <td><?=$res23+$res24?></td>
-                            <td><?=fetch_grade(($res23+$res24),100)?></td>
+                            <td><?=safe_num($res23)+safe_num($res24)?></td>
+                            <td><?=fetch_grade((safe_num($res23)+safe_num($res24)),100)?></td>
                             <td><?=$res43=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 3, $sub_seq=34)?></td>
                             <td><?=$res44=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 3, $sub_seq=34)?></td>
-                            <td><?=$res43+$res44?></td>
-                            <td><?=fetch_grade(($res43+$res44),100)?></td>
+                            <td><?=safe_num($res43)+safe_num($res44)?></td>
+                            <td><?=fetch_grade((safe_num($res43)+safe_num($res44)),100)?></td>
                         </tr>
                         <tr>
                             <td>Mathematics</td>
                             <td><?=$res5=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 1, $sub_seq=30)?></td>
                             <td><?=$res6=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 1, $sub_seq=30)?></td>
-                            <td><?=$res5+$res6?></td>
-                            <td><?=fetch_grade(($res5+$res6),100)?></td>
+                            <td><?=safe_num($res5)+safe_num($res6)?></td>
+                            <td><?=fetch_grade((safe_num($res5)+safe_num($res6)),100)?></td>
                             <td><?=$res25=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 2, $sub_seq=30)?></td>
                             <td><?=$res26=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 2, $sub_seq=30)?></td>
-                            <td><?=$res25+$res26?></td>
-                            <td><?=fetch_grade(($res25+$res26),100)?></td>
+                            <td><?=safe_num($res25)+safe_num($res26)?></td>
+                            <td><?=fetch_grade((safe_num($res25)+safe_num($res26)),100)?></td>
                             <td><?=$res45=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 3, $sub_seq=30)?></td>
                             <td><?=$res46=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 3, $sub_seq=30)?></td>
-                            <td><?=$res45+$res46?></td>
-                            <td><?=fetch_grade(($res45+$res46),100)?></td>
+                            <td><?=safe_num($res45)+safe_num($res46)?></td>
+                            <td><?=fetch_grade((safe_num($res45)+safe_num($res46)),100)?></td>
                         </tr>
                         <tr>
                             <td>Life Science</td>
                             <td><?=$res7=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 1, $sub_seq=35)?></td>
                             <td><?=$res8=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 1, $sub_seq=35)?></td>
-                            <td><?=$res7+$res8?></td>
-                            <td><?=fetch_grade(($res7+$res8),100)?></td>
+                            <td><?=safe_num($res7)+safe_num($res8)?></td>
+                            <td><?=fetch_grade((safe_num($res7)+safe_num($res8)),100)?></td>
                             <td><?=$res27=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 2, $sub_seq=35)?></td>
                             <td><?=$res28=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 2, $sub_seq=35)?></td>
-                            <td><?=$res27+$res28?></td>
-                            <td><?=fetch_grade(($res27+$res28),100)?></td>
+                            <td><?=safe_num($res27)+safe_num($res28)?></td>
+                            <td><?=fetch_grade((safe_num($res27)+safe_num($res28)),100)?></td>
                             <td><?=$res47=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 3, $sub_seq=35)?></td>
                             <td><?=$res48=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 3, $sub_seq=35)?></td>
-                            <td><?=$res47+$res48?></td>
-                            <td><?=fetch_grade(($res47+$res48),100)?></td>
+                            <td><?=safe_num($res47)+safe_num($res48)?></td>
+                            <td><?=fetch_grade((safe_num($res47)+safe_num($res48)),100)?></td>
                         </tr>
                         <tr>
                             <td>Physical Science</td>
                             <td><?=$res9=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 1, $sub_seq=36)?></td>
                             <td><?=$res10=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 1, $sub_seq=36)?></td>
-                            <td><?=$res9+$res10?></td>
-                            <td><?=fetch_grade(($res9+$res10),100)?></td>
+                            <td><?=safe_num($res9)+safe_num($res10)?></td>
+                            <td><?=fetch_grade((safe_num($res9)+safe_num($res10)),100)?></td>
                             <td><?=$res29=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 2, $sub_seq=36)?></td>
                             <td><?=$res30=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 2, $sub_seq=36)?></td>
-                            <td><?=$res29+$res30?></td>
-                            <td><?=fetch_grade(($res29+$res30),100)?></td>
+                            <td><?=safe_num($res29)+safe_num($res30)?></td>
+                            <td><?=fetch_grade((safe_num($res29)+safe_num($res30)),100)?></td>
                             <td><?=$res49=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 3, $sub_seq=36)?></td>
                             <td><?=$res50=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 3, $sub_seq=36)?></td>
-                            <td><?=$res49+$res50?></td>
-                            <td><?=fetch_grade(($res49+$res50),100)?></td>
+                            <td><?=safe_num($res49)+safe_num($res50)?></td>
+                            <td><?=fetch_grade((safe_num($res49)+safe_num($res50)),100)?></td>
                         </tr>
                         <tr>
                             <td>History</td>
                             <td><?=$res11=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 1, $sub_seq=37)?></td>
                             <td><?=$res12=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 1, $sub_seq=37)?></td>
-                            <td><?=$res11+$res12?></td>
-                            <td><?=fetch_grade(($res11+$res12),100)?></td>
+                            <td><?=safe_num($res11)+safe_num($res12)?></td>
+                            <td><?=fetch_grade((safe_num($res11)+safe_num($res12)),100)?></td>
                             <td><?=$res31=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 2, $sub_seq=37)?></td>
                             <td><?=$res32=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 2, $sub_seq=37)?></td>
-                            <td><?=$res31+$res32?></td>
-                            <td><?=fetch_grade(($res31+$res32),100)?></td>
+                            <td><?=safe_num($res31)+safe_num($res32)?></td>
+                            <td><?=fetch_grade((safe_num($res31)+safe_num($res32)),100)?></td>
                             <td><?=$res51=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 3, $sub_seq=37)?></td>
                             <td><?=$res52=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 3, $sub_seq=37)?></td>
-                            <td><?=$res51+$res52?></td>
-                            <td><?=fetch_grade(($res51+$res52),100)?></td>
+                            <td><?=safe_num($res51)+safe_num($res52)?></td>
+                            <td><?=fetch_grade((safe_num($res51)+safe_num($res52)),100)?></td>
                         </tr>
                         <tr>
                             <td>Geography</td>
                             <td><?=$res13=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 1, $sub_seq=33)?></td>
                             <td><?=$res14=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 1, $sub_seq=33)?></td>
-                            <td><?=$res13+$res14?></td>
-                            <td><?=fetch_grade(($res13+$res14),100)?></td>
+                            <td><?=safe_num($res13)+safe_num($res14)?></td>
+                            <td><?=fetch_grade((safe_num($res13)+safe_num($res14)),100)?></td>
                             <td><?=$res33=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 2, $sub_seq=33)?></td>
                             <td><?=$res34=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 2, $sub_seq=33)?></td>
-                            <td><?=$res33+$res34?></td>
-                            <td><?=fetch_grade(($res33+$res34),100)?></td>
+                            <td><?=safe_num($res33)+safe_num($res34)?></td>
+                            <td><?=fetch_grade((safe_num($res33)+safe_num($res34)),100)?></td>
                             <td><?=$res53=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 3, $sub_seq=37)?></td>
                             <td><?=$res54=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 3, $sub_seq=37)?></td>
-                            <td><?=$res53+$res54?></td>
-                            <td><?=fetch_grade(($res53+$res54),100)?></td>
+                            <td><?=safe_num($res53)+safe_num($res54)?></td>
+                            <td><?=fetch_grade((safe_num($res53)+safe_num($res54)),100)?></td>
                         </tr>
                         <tr>
                             <td>PT</td>
                             <td><?=$res15=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 1, $sub_seq=38)?></td>
                             <td><?=$res16=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 1, $sub_seq=38)?></td>
-                            <td><?=$res15+$res16?></td>
-                            <td><?=fetch_grade(($res15+$res16),100)?></td>
+                            <td><?=safe_num($res15)+safe_num($res16)?></td>
+                            <td><?=fetch_grade((safe_num($res15)+safe_num($res16)),100)?></td>
                             <td><?=$res35=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 2, $sub_seq=38)?></td>
                             <td><?=$res36=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 2, $sub_seq=38)?></td>
-                            <td><?=$res35+$res36?></td>
-                            <td><?=fetch_grade(($res35+$res36),100)?></td>
+                            <td><?=safe_num($res35)+safe_num($res36)?></td>
+                            <td><?=fetch_grade((safe_num($res35)+safe_num($res36)),100)?></td>
                             <td><?=$res55=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 3, $sub_seq=38)?></td>
                             <td><?=$res56=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 3, $sub_seq=38)?></td>
-                            <td><?=$res55+$res56?></td>
-                            <td><?=fetch_grade(($res55+$res56),100)?></td>
+                            <td><?=safe_num($res55)+safe_num($res56)?></td>
+                            <td><?=fetch_grade((safe_num($res55)+safe_num($res56)),100)?></td>
                         </tr>
                         <tr>
                             <td>Com</td>
                             <td><?=$res17=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 1, $sub_seq=39)?></td>
                             <td><?=$res18=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 1, $sub_seq=39)?></td>
-                            <td><?=$res17+$res18?></td>
-                            <td><?=fetch_grade(($res17+$res18),100)?></td>
+                            <td><?=safe_num($res17)+safe_num($res18)?></td>
+                            <td><?=fetch_grade((safe_num($res17)+safe_num($res18)),100)?></td>
                             <td><?=$res37=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 2, $sub_seq=39)?></td>
                             <td><?=$res38=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 2, $sub_seq=39)?></td>
-                            <td><?=$res37+$res38?></td>
-                            <td><?=fetch_grade(($res37+$res38),100)?></td>
+                            <td><?=safe_num($res37)+safe_num($res38)?></td>
+                            <td><?=fetch_grade((safe_num($res37)+safe_num($res38)),100)?></td>
                             <td><?=$res57=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 3, $sub_seq=39)?></td>
                             <td><?=$res58=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 3, $sub_seq=39)?></td>
-                            <td><?=$res57+$res58?></td>
-                            <td><?=fetch_grade(($res57+$res58),100)?></td>
+                            <td><?=safe_num($res57)+safe_num($res58)?></td>
+                            <td><?=fetch_grade((safe_num($res57)+safe_num($res58)),100)?></td>
                         </tr>
                         <tr>
                             <td>MS</td>
                             <td><?=$res19=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 1, $sub_seq=41)?></td>
                             <td><?=$res20=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 1, $sub_seq=41)?></td>
-                            <td><?=$res19+$res20?></td>
-                            <td><?=fetch_grade(($res19+$res20),100)?></td>
+                            <td><?=safe_num($res19)+safe_num($res20)?></td>
+                            <td><?=fetch_grade((safe_num($res19)+safe_num($res20)),100)?></td>
                             <td><?=$res39=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 2, $sub_seq=41)?></td>
                             <td><?=$res40=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 2, $sub_seq=41)?></td>
-                            <td><?=$res39+$res40?></td>
-                            <td><?=fetch_grade(($res39+$res40),100)?></td>
+                            <td><?=safe_num($res39)+safe_num($res40)?></td>
+                            <td><?=fetch_grade((safe_num($res39)+safe_num($res40)),100)?></td>
                             <td><?=$res59=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 1, $term_seq = 3, $sub_seq=41)?></td>
                             <td><?=$res60=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 4, $term_seq = 3, $sub_seq=41)?></td>
-                            <td><?=$res59+$res60?></td>
-                            <td><?=fetch_grade(($res59+$res60),100)?></td>
+                            <td><?=safe_num($res59)+safe_num($res60)?></td>
+                            <td><?=fetch_grade((safe_num($res59)+safe_num($res60)),100)?></td>
                         </tr>
 
                         <!-- Grade -->
@@ -560,20 +562,20 @@ function fetch_sig_status($std_seq, $test_seq, $term_seq){
                         <tr>
                             <td>Head master's Signature</td>
                             <td colspan="4">
-                                <?php if(($res1+$res2) > 0 or ($res3+$res4) > 0 or ($res5+$res6) > 0 or ($res7+$res8) > 0 or
-                                    ($res9+$res10) > 0 or ($res11+$res12) > 0 or ($res13+$res14) > 0 or ($res53+$res54) > 0 or ($res17+$res18) > 0 or ($res19+$res20) > 0) { ?>
+                                <?php if((safe_num($res1)+safe_num($res2)) > 0 or (safe_num($res3)+safe_num($res4)) > 0 or (safe_num($res5)+safe_num($res6)) > 0 or (safe_num($res7)+safe_num($res8)) > 0 or
+                                    (safe_num($res9)+safe_num($res10)) > 0 or (safe_num($res11)+safe_num($res12)) > 0 or (safe_num($res13)+safe_num($res14)) > 0 or (safe_num($res53)+safe_num($res54)) > 0 or (safe_num($res17)+safe_num($res18)) > 0 or (safe_num($res19)+safe_num($res20)) > 0) { ?>
                                     <img width="25" src="<?=base_url('assets/img') . '/' . $company->HEADMASTER_SIGN?>" />
                                 <?php } ?>
                             </td>
                             <td colspan="4">
-                                <?php if(($res21+$res22) > 0 or ($res23+$res24) > 0 or ($res25+$res26) > 0 or ($res27+$res28) > 0 or
-                                    ($res29+$res30) > 0 or ($res31+$res32) > 0 or ($res33+$res34) > 0 or ($res35+$res36) > 0 or ($res37+$res38)>0 or ($res39+$res40)>0) { ?>
+                                <?php if((safe_num($res21)+safe_num($res22)) > 0 or (safe_num($res23)+safe_num($res24)) > 0 or (safe_num($res25)+safe_num($res26)) > 0 or (safe_num($res27)+safe_num($res28)) > 0 or
+                                    (safe_num($res29)+safe_num($res30)) > 0 or (safe_num($res31)+safe_num($res32)) > 0 or (safe_num($res33)+safe_num($res34)) > 0 or (safe_num($res35)+safe_num($res36)) > 0 or (safe_num($res37)+safe_num($res38))>0 or (safe_num($res39)+safe_num($res40))>0) { ?>
                                     <img width="25" src="<?=base_url('assets/img') . '/' . $company->HEADMASTER_SIGN?>" />
                                 <?php } ?>
                             </td>
                             <td colspan="4">
-                                <?php if(($res41+$res42) > 0 or ($res43+$res44) > 0 or ($res45+$res46) > 0 or ($res47+$res48) > 0 or
-                                    ($res49+$res50) > 0 or ($res51+$res52) > 0 or ($res53+$res54) > 0 or ($res55+$res56) > 0 or ($res57+$res58) > 0 or ($res59+$res60) > 0) { ?>
+                                <?php if((safe_num($res41)+safe_num($res42)) > 0 or (safe_num($res43)+safe_num($res44)) > 0 or (safe_num($res45)+safe_num($res46)) > 0 or (safe_num($res47)+safe_num($res48)) > 0 or
+                                    (safe_num($res49)+safe_num($res50)) > 0 or (safe_num($res51)+safe_num($res52)) > 0 or (safe_num($res53)+safe_num($res54)) > 0 or (safe_num($res55)+safe_num($res56)) > 0 or (safe_num($res57)+safe_num($res58)) > 0 or (safe_num($res59)+safe_num($res60)) > 0) { ?>
                                     <img width="25" src="<?=base_url('assets/img') . '/' . $company->HEADMASTER_SIGN?>" />
                                 <?php } ?>
                             </td>
@@ -944,16 +946,16 @@ function fetch_sig_status($std_seq, $test_seq, $term_seq){
 
                                 <td><?=$res1=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 5, $term_seq = 1, $sub->CS_Sub_id)?></td>
                                 <td><?=$res2=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 6, $term_seq = 1, $sub->CS_Sub_id)?></td>
-                                <td><?= str_pad(($res1 + $res2), 2, '0', STR_PAD_LEFT); ?></td>
-                                <td><?php echo ($res1 == '-' and $res2 == '-') ? '-' : (fetch_grade_secondary(($res1+$res2),100)); ?></td>
+                                <td><?= str_pad((safe_num($res1)+safe_num($res2)), 2, '0', STR_PAD_LEFT); ?></td>
+                                <td><?php echo ($res1 == '-' and $res2 == '-') ? '-' : (fetch_grade_secondary((safe_num($res1)+safe_num($res2)),100)); ?></td>
                                 <td><?=$res21=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 5, $term_seq = 2, $sub->CS_Sub_id)?></td>
                                 <td><?=$res22=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 6, $term_seq = 2, $sub->CS_Sub_id)?></td>
-                                <td><?= str_pad(($res21 + $res22), 2, '0', STR_PAD_LEFT); ?></td>
-                               <td><?php echo ($res21 == '-' and $res22 == '-') ? '-' : (fetch_grade_secondary(($res21+$res22),100)); ?></td>
+                                <td><?= str_pad((safe_num($res21)+safe_num($res22)), 2, '0', STR_PAD_LEFT); ?></td>
+                               <td><?php echo ($res21 == '-' and $res22 == '-') ? '-' : (fetch_grade_secondary((safe_num($res21)+safe_num($res22)),100)); ?></td>
                                 <td><?=$res41=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 5, $term_seq = 3, $sub->CS_Sub_id)?></td>
                                 <td><?=$res42=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 6, $term_seq = 3, $sub->CS_Sub_id)?></td>
-                                <td><?= str_pad(($res41 + $res42), 2, '0', STR_PAD_LEFT); ?></td>
-                                <td><?php echo ($res41 == '-' and $res42 == '-') ? '-' : (fetch_grade_secondary(($res41+$res42),100)); ?></td>
+                                <td><?= str_pad((safe_num($res41)+safe_num($res42)), 2, '0', STR_PAD_LEFT); ?></td>
+                                <td><?php echo ($res41 == '-' and $res42 == '-') ? '-' : (fetch_grade_secondary((safe_num($res41)+safe_num($res42)),100)); ?></td>
 
                             </tr>
                                 <?php
@@ -964,16 +966,19 @@ function fetch_sig_status($std_seq, $test_seq, $term_seq){
 
                                 <td><?=$res1=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 2, $term_seq = 1, $sub->CS_Sub_id)?></td>
                                 <td><?=$res2=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 3, $term_seq = 1, $sub->CS_Sub_id)?></td>
-                                <td><?= str_pad(($res1 + $res2), 2, '0', STR_PAD_LEFT); ?></td>
-                                <td><?php echo ($res1 == '-' and $res2 == '-') ? '-' : (fetch_grade_secondary(($res1+$res2),100)); ?></td>
+                                <?php $s12 = (is_numeric($res1)?$res1:0) + (is_numeric($res2)?$res2:0); ?>
+                                <td><?= str_pad($s12, 2, '0', STR_PAD_LEFT); ?></td>
+                                <td><?php echo ($res1 == '-' and $res2 == '-') ? '-' : (fetch_grade_secondary($s12,100)); ?></td>
                                 <td><?=$res21=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 2, $term_seq = 2, $sub->CS_Sub_id)?></td>
                                 <td><?=$res22=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 3, $term_seq = 2, $sub->CS_Sub_id)?></td>
-                                <td><?= str_pad(($res21 + $res22), 2, '0', STR_PAD_LEFT); ?></td>
-                               <td><?php echo ($res21 == '-' and $res22 == '-') ? '-' : (fetch_grade_secondary(($res21+$res22),100)); ?></td>
+                                <?php $s2122 = (is_numeric($res21)?$res21:0) + (is_numeric($res22)?$res22:0); ?>
+                                <td><?= str_pad($s2122, 2, '0', STR_PAD_LEFT); ?></td>
+                               <td><?php echo ($res21 == '-' and $res22 == '-') ? '-' : (fetch_grade_secondary($s2122,100)); ?></td>
                                 <td><?=$res41=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 2, $term_seq = 3, $sub->CS_Sub_id)?></td>
                                 <td><?=$res42=fetch_marks($sd['STD_SEQ'], $cs_seq, $test_seq = 3, $term_seq = 3, $sub->CS_Sub_id)?></td>
-                                <td><?= str_pad(($res41 + $res42), 2, '0', STR_PAD_LEFT); ?></td>
-                                <td><?php echo ($res41 == '-' and $res42 == '-') ? '-' : (fetch_grade_secondary(($res41+$res42),100)); ?></td>
+                                <?php $s4142 = (is_numeric($res41)?$res41:0) + (is_numeric($res42)?$res42:0); ?>
+                                <td><?= str_pad($s4142, 2, '0', STR_PAD_LEFT); ?></td>
+                                <td><?php echo ($res41 == '-' and $res42 == '-') ? '-' : (fetch_grade_secondary($s4142,100)); ?></td>
 
                             </tr>
                                 <?php
@@ -1007,8 +1012,8 @@ function fetch_sig_status($std_seq, $test_seq, $term_seq){
                                      }
                                    
                                 
-                                    $alltotal += ($res1 + $res2);
-                                    if (($res1 + $res2) > 0) {
+                                    $alltotal += (safe_num($res1)+safe_num($res2));
+                                    if ((safe_num($res1)+safe_num($res2)) > 0) {
                                         $subcount += 1;
                                     } 
                                 }
@@ -1029,12 +1034,12 @@ function fetch_sig_status($std_seq, $test_seq, $term_seq){
                         
                             foreach ($subjects as $subject) {
                                 if ($subject->CS_Sub_id == 33 || $subject->CS_Sub_id == 61) {
-                                    $fa += fetch_marks($sd['STD_SEQ'], $cs_seq, 5, $term->et_id, $subject->CS_Sub_id);
-                                    $sa += fetch_marks($sd['STD_SEQ'], $cs_seq, 6, $term->et_id, $subject->CS_Sub_id);
+                                    $fa += safe_num(fetch_marks($sd['STD_SEQ'], $cs_seq, 5, $term->et_id, $subject->CS_Sub_id));
+                                    $sa += safe_num(fetch_marks($sd['STD_SEQ'], $cs_seq, 6, $term->et_id, $subject->CS_Sub_id));
                                     $gtl = ($fa + $sa);
                                 } else {
-                                    $fa += fetch_marks($sd['STD_SEQ'], $cs_seq, 2, $term->et_id, $subject->CS_Sub_id);
-                                    $sa += fetch_marks($sd['STD_SEQ'], $cs_seq, 3, $term->et_id, $subject->CS_Sub_id);
+                                    $fa += safe_num(fetch_marks($sd['STD_SEQ'], $cs_seq, 2, $term->et_id, $subject->CS_Sub_id));
+                                    $sa += safe_num(fetch_marks($sd['STD_SEQ'], $cs_seq, 3, $term->et_id, $subject->CS_Sub_id));
                                     $gtl = ($fa + $sa);
                                 }
                         

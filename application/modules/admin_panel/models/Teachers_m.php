@@ -996,12 +996,12 @@ EOD;
                         $this->db->where('MD_STD_SEQ', $s['STD_SEQ']);
                         $marks_rs = $this->db->get('marks_dtl')->result_array();
                         $marks_arr = array_column($marks_rs, 'MD_MARKS');
-                        if($marks_arr){$marks = $marks_arr[0]; $exam_total+=$marks;} else {$marks = '';}
+                        if($marks_arr){$marks = $marks_arr[0]; $exam_total+=(float)$marks;} else {$marks = '';}
 
                         $html .= <<<EOD
     <td align="center">$marks</td>
 EOD;
-                        $sub_total[$sub_total_index] += $marks;
+                        $sub_total[$sub_total_index] += (is_numeric($marks) ? (float)$marks : 0);
                         $sub_total_index++;
                     }
 

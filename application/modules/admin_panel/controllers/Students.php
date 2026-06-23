@@ -65,10 +65,12 @@ class Students extends My_Controller {
         if($this->check_permission(array(1,2,6),42) == true) {
             $this->load->model('Students_m');
             $data = $this->Students_m->print_leaving_certificate($certificate_id);
-            if( $data['type'] == 'load_view') {
-                $this->load->view($data['page'], $data['data']);
-            } elseif( $data['type'] == 'redirect') {
-                redirect(base_url($data['page']));
+            if($data !== null) {
+                if( $data['type'] == 'load_view') {
+                    $this->load->view($data['page'], $data['data']);
+                } elseif( $data['type'] == 'redirect') {
+                    redirect(base_url($data['page']));
+                }
             }
         }
     }
@@ -103,10 +105,12 @@ class Students extends My_Controller {
         if($this->check_permission(array(1,2,6),43) == true) {
             $this->load->model('Students_m');
             $data = $this->Students_m->print_character_certificate($certificate_id);
-            if( $data['type'] == 'load_view') {
-                $this->load->view($data['page'], $data['data']);
-            } elseif( $data['type'] == 'redirect') {
-                redirect(base_url($data['page']));
+            if($data !== null) {
+                if( $data['type'] == 'load_view') {
+                    $this->load->view($data['page'], $data['data']);
+                } elseif( $data['type'] == 'redirect') {
+                    redirect(base_url($data['page']));
+                }
             }
         }
     }
@@ -141,10 +145,12 @@ class Students extends My_Controller {
         if($this->check_permission(array(1,2,6),44) == true) {
             $this->load->model('Students_m');
             $data = $this->Students_m->print_general_letter($certificate_id);
-            if( $data['type'] == 'load_view') {
-                $this->load->view($data['page'], $data['data']);
-            } elseif( $data['type'] == 'redirect') {
-                redirect(base_url($data['page']));
+            if($data !== null) {
+                if( $data['type'] == 'load_view') {
+                    $this->load->view($data['page'], $data['data']);
+                } elseif( $data['type'] == 'redirect') {
+                    redirect(base_url($data['page']));
+                }
             }
         }
     }

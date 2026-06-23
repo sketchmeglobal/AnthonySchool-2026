@@ -485,10 +485,12 @@ class Reports extends My_Controller {
         if($this->check_permission(array(1,2,6),8) == true) {
             $this->load->model('Reports_m');
             $data = $this->Reports_m->print_class_subject_topper_report();
-            if( $data['type'] == 'load_view') {
-                $this->load->view($data['page'], $data['data']);
-            } elseif( $data['type'] == 'redirect') {
-                redirect(base_url($data['page']));
+            if($data !== null) {
+                if( $data['type'] == 'load_view') {
+                    $this->load->view($data['page'], $data['data']);
+                } elseif( $data['type'] == 'redirect') {
+                    redirect(base_url($data['page']));
+                }
             }
         }
     }

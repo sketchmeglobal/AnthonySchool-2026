@@ -11575,13 +11575,184 @@ EOD;
 EOD;
 
         $pdf->writeHTMLCell(220, 0, 5, 28, $html, 0, 1, 0, false, 'center', true);
-        
+
         $pdf->Output($doc_name . '.pdf', 'I');
     }
-}
-   
-   
-   
+    }
+
+    public function print_class_subject_topper_report() {
+        if($this->input->post('submit') == 'print_class_subject_topper_report') {
+
+            $class   = $this->input->post('rank_class');
+            $subject = $this->input->post('rank_subject');
+
+            if (empty($class)) {
+                $this->session->set_flashdata('type', 'error');
+                $this->session->set_flashdata('title', 'Naa!');
+                $this->session->set_flashdata('msg', 'Please select a class.');
+                return array('type' => 'redirect', 'page' => 'admin/class_subject_topper');
+            }
+
+            $company    = $this->company_name((array)$class);
+            $class_data = $this->db->get_where('class_sec_hdr', array('CS_SEQ' => $class))->row();
+
+            $subname = 'All';
+            if ($subject && $subject !== 'All') {
+                $sub_row = $this->db->get_where('subject', array('sub_id' => $subject))->row();
+                $subname = $sub_row ? $sub_row->sub_name : 'All';
+            }
+
+            $allsubjects = $this->db
+                ->select('class_sub_link.*, sub_name')
+                ->join('subject', 'sub_id = CS_Sub_id', 'left')
+                ->where('CS_SEQ', $class)
+                ->order_by('Sorting', 'ASC')
+                ->get('class_sub_link')->result();
+
+            $markssubjects = $this->db
+                ->select('class_sub_link.*, sub_name')
+                ->join('subject', 'sub_id = CS_Sub_id', 'left')
+                ->where('CS_SEQ', $class)
+                ->where('subject.marks_type', 'Marks')
+                ->order_by('Sorting', 'ASC')
+                ->get('class_sub_link')->result();
+
+            $student_list = $this->db
+                ->where('STD_CS_SEQ', $class)
+                ->where('STD_LEFT', 0)
+                ->order_by('ST_FULL_NAME', 'ASC')
+                ->get('student_details')->result();
+
+            $pdf = new Pdf(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+            $doc_name = 'Class_Subject_Topper_' . date('d-m-Y_h-i-A');
+
+            $pdf->SetCreator(PDF_CREATOR);
+            $pdf->SetAuthor($company->COM_NAME);
+            $pdf->SetTitle($doc_name);
+            $pdf->SetSubject('Class Subject Topper Report');
+            $pdf->SetKeywords('Class Subject Topper Report, smg');
+
+            $html_header = <<<EOD
+<div style="text-align:center;">
+<span style="font-size:25px;"><strong>{$company->COM_NAME}</strong></span><br>
+{$company->COM_ADD1}, {$company->COM_ADD2}<br>
+<strong>Class Subject Topper Report</strong><br>
+</div>
+EOD;
+            $pdf->setHtmlHeader($html_header, false);
+            $pdf->setHeaderFont(array(PDF_FONT_NAME_MAIN, '', 8));
+            $pdf->setFooterFont(array(PDF_FONT_NAME_DATA, '', PDF_FONT_SIZE_DATA));
+            $pdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
+            $pdf->SetMargins(30, 20, 10, true);
+            $pdf->SetHeaderMargin(PDF_MARGIN_HEADER);
+            $pdf->SetFooterMargin(PDF_MARGIN_FOOTER);
+            $pdf->setPrintFooter(false);
+            $pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
+            $pdf->setFontSubsetting(true);
+            $pdf->SetFont('times', '', 9, '', true);
+            $pdf->AddPage('L', 'LEGAL');
+
+            $html  = '<table style="width:100%;">';
+            $html .= '<tr>';
+            $html .= '<th width="80"><strong>Class &amp; Sec</strong></th>';
+            $html .= '<th width="150"><strong>' . $class_data->Class_Name . ' ' . $class_data->Sec_Name . '</strong></th>';
+            $html .= '<th width="80"><strong>Subject:</strong></th>';
+            $html .= '<th width="400" align="left"><strong><u>&nbsp;' . $subname . '&nbsp;</u></strong></th>';
+            $html .= '<th width="90" align="right"><strong>Year: ' . $company->COM_FIN_YEAR . '</strong></th>';
+            $html .= '</tr></table>';
+
+            $html .= '<table border="1" style="width:100%;">';
+            $html .= '<thead><tr>';
+            $html .= '<th width="40" align="center"><strong>#</strong></th>';
+            $html .= '<th width="90" align="center"><strong>Reg No</strong></th>';
+            $html .= '<th width="60" align="center"><strong>Roll No</strong></th>';
+            $html .= '<th width="220" align="center"><strong>Student Name</strong></th>';
+            $html .= '<th width="70" align="center"><strong>Term 1</strong></th>';
+            $html .= '<th width="70" align="center"><strong>Term 2</strong></th>';
+            $html .= '<th width="70" align="center"><strong>Term 3</strong></th>';
+            $html .= '<th width="70" align="center"><strong>Total</strong></th>';
+            $html .= '<th width="70" align="center"><strong>%</strong></th>';
+            $html .= '<th width="60" align="center"><strong>Rank</strong></th>';
+            $html .= '</tr></thead><tbody>';
+
+            $students = array();
+            foreach ($student_list as $row) {
+                if ($subject && $subject !== 'All') {
+                    $t1 = (float)$this->fetch_marks($row->STD_SEQ, $class, 1, 1, $subject)
+                        + (float)$this->fetch_marks($row->STD_SEQ, $class, 4, 1, $subject);
+                    $t2 = (float)$this->fetch_marks($row->STD_SEQ, $class, 1, 2, $subject)
+                        + (float)$this->fetch_marks($row->STD_SEQ, $class, 4, 2, $subject);
+                    $t3 = (float)$this->fetch_marks($row->STD_SEQ, $class, 1, 3, $subject)
+                        + (float)$this->fetch_marks($row->STD_SEQ, $class, 4, 3, $subject);
+                } else {
+                    $t1 = $t2 = $t3 = 0;
+                    foreach ($allsubjects as $sub) {
+                        $t1 += (float)$this->fetch_marks($row->STD_SEQ, $class, 1, 1, $sub->CS_Sub_id)
+                             + (float)$this->fetch_marks($row->STD_SEQ, $class, 4, 1, $sub->CS_Sub_id);
+                        $t2 += (float)$this->fetch_marks($row->STD_SEQ, $class, 1, 2, $sub->CS_Sub_id)
+                             + (float)$this->fetch_marks($row->STD_SEQ, $class, 4, 2, $sub->CS_Sub_id);
+                        $t3 += (float)$this->fetch_marks($row->STD_SEQ, $class, 1, 3, $sub->CS_Sub_id)
+                             + (float)$this->fetch_marks($row->STD_SEQ, $class, 4, 3, $sub->CS_Sub_id);
+                    }
+                }
+                $students[] = array(
+                    'reg_no'  => $row->STD_REGNO,
+                    'roll_no' => $row->STD_ROLLNO,
+                    'name'    => $row->ST_FULL_NAME,
+                    't1'      => $t1,
+                    't2'      => $t2,
+                    't3'      => $t3,
+                    'total'   => $t1 + $t2 + $t3,
+                );
+            }
+
+            // Sort descending by total for rank calculation
+            usort($students, function($a, $b) { return $b['total'] <=> $a['total']; });
+
+            // Assign ranks (shared rank for ties)
+            $rank = 0; $counter = 0; $prev_total = -1;
+            foreach ($students as $k => $s) {
+                $counter++;
+                if ($s['total'] != $prev_total) $rank = $counter;
+                $students[$k]['rank'] = $rank;
+                $prev_total = $s['total'];
+            }
+
+            $total_marks_per_student = ($subject && $subject !== 'All') ? 300 : count($markssubjects) * 300;
+
+            $j = 0;
+            foreach ($students as $s) {
+                $j++;
+                $pct = $total_marks_per_student > 0 ? round(($s['total'] / $total_marks_per_student) * 100) : 0;
+                $place = $s['rank'] == 1 ? 'First' : ($s['rank'] == 2 ? 'Second' : ($s['rank'] == 3 ? 'Third' : $s['rank']));
+                $html .= '<tr>'
+                    . '<td width="40"  align="center">' . $j . '</td>'
+                    . '<td width="90"  align="center">' . $s['reg_no'] . '</td>'
+                    . '<td width="60"  align="center">' . $s['roll_no'] . '</td>'
+                    . '<td width="220" align="left">'   . $s['name'] . '</td>'
+                    . '<td width="70"  align="center">' . $s['t1'] . '</td>'
+                    . '<td width="70"  align="center">' . $s['t2'] . '</td>'
+                    . '<td width="70"  align="center">' . $s['t3'] . '</td>'
+                    . '<td width="70"  align="center">' . $s['total'] . '</td>'
+                    . '<td width="70"  align="center">' . $pct . '%</td>'
+                    . '<td width="60"  align="center">' . $place . '</td>'
+                    . '</tr>';
+            }
+
+            $html .= '</tbody></table>';
+
+            ob_end_clean();
+            $pdf->writeHTMLCell(220, 0, 5, 28, $html, 0, 1, 0, false, 'center', true);
+            $pdf->Output($doc_name . '.pdf', 'I');
+
+        } else {
+            $this->session->set_flashdata('type', 'error');
+            $this->session->set_flashdata('title', 'Oh Snap!');
+            $this->session->set_flashdata('msg', 'Something went wrong.');
+            return array('type' => 'redirect', 'page' => 'admin/class_subject_topper');
+        }
+    }
+
     public function notice_report() {
         $notices = $this->db->get('notice_header')->result_array();
         $data['notices'] = $notices;
